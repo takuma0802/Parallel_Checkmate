@@ -10,6 +10,9 @@ namespace Games.HorseLabyrinth
 {
     public class BoardManager : MonoBehaviour
     {
+        public int columnSize = 3;
+        public int rowSize = 8;
+
         [SerializeField] private GameObject cellPrefab;
 
         // Size周り
@@ -18,7 +21,6 @@ namespace Games.HorseLabyrinth
             {3, 1f}, {4, 0.79f}, {5, 0.68f}, {6, 0.61f}, {7, 0.53f}};
         private float defaultCellSizeWidth = 252f;
         private float defaultCellSizeHeight = 308f;
-        private int columnSize;
         private float cellSizeWidth;
         private float cellSizeHeight;
 
@@ -58,12 +60,10 @@ namespace Games.HorseLabyrinth
             ObjectCreator.DestroyAllChild(this.gameObject);
         }
 
-        public IEnumerator CreateBoard(System.Action<Vector3> callback, CellClickedCallback cellEvent, string[] board)
+        public IEnumerator CreateBoard()
         {
             // 初期化
-            cellClickedEvent = cellEvent;
-            columnSize = (int)Math.Sqrt(board.Length);
-            cells = new CellHandler[columnSize, columnSize];
+            cells = new CellHandler[columnSize, rowSize];
             cellSizeWidth = defaultCellSizeWidth * CellSizeRate;
             cellSizeHeight = defaultCellSizeHeight * CellSizeRate;
             var spacing = -70 * CellSizeRate;
@@ -72,18 +72,17 @@ namespace Games.HorseLabyrinth
             GetComponent<GridLayoutGroup>().spacing = new Vector2(0, spacing);
             GetComponent<GridLayoutGroup>().constraintCount = columnSize;
 
-            for (int row = 0; row < columnSize; row++)
+            for (int row = 0; row < rowSize; row++)
             {
                 for (int column = 0; column < columnSize; column++)
                 {
-                    StartCoroutine(CreateCell(board[(columnSize - 1) * row + row + column], row, column));
+                    StartCoroutine(CreateCell(CellType.None, row, column));
                 }
             }
             yield return null;
-            callback(horsePosition);
         }
 
-        private IEnumerator CreateCell(string cellType, int row, int column)
+        private IEnumerator CreateCell(CellType cellType, int row, int column)
         {
             CellHandler cell = ObjectCreator.CreateInObject(this.gameObject, cellPrefab).GetComponent<CellHandler>();
             yield return cell.SetCell(row, column, cellType, CellSizeRate, columnSize);
@@ -161,13 +160,6 @@ namespace Games.HorseLabyrinth
 
             return cell.CellType == CellType.Carrot;
         }
-
-        // public IEnumerator SinkCell(bool isUndo)
-        // {
-        //     if (!isUndo) yield return previousCells[previousCells.Count - 2].SinkCell();
-
-        //     previousCells[previousCells.Count - 1].OnClickedCell();
-        // }
 
         public void Undo()
         {

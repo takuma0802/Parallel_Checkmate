@@ -47,7 +47,7 @@ namespace Games.HorseLabyrinth
             get { return column; }
         }
 
-        public IEnumerator SetCell(int row, int column, string cellType, float cellSizeRate, int columnSize)
+        public IEnumerator SetCell(int row, int column, CellType cellType, float cellSizeRate, int columnSize)
         {
             this.row = row;
             this.column = column;
@@ -58,30 +58,30 @@ namespace Games.HorseLabyrinth
             yield return null;
         }
 
-        private void SetType(string type)
+        private void SetType(CellType type)
         {
             switch (type)
             {
-                case "0": // None
+                case CellType.None: // None
                     cellType = CellType.None;
                     break;
 
-                case "1": // DefaultCell
-                    cellType = CellType.Default;
-                    ActivateCell(defaultCell);
-                    break;
+                // case "1": // DefaultCell
+                //     cellType = CellType.Default;
+                //     ActivateCell(defaultCell);
+                //     break;
 
-                case "s": // Start
-                    cellType = CellType.Horse;
-                    ActivateCell(horseCell);
-                    break;
+                // case "s": // Start
+                //     cellType = CellType.Horse;
+                //     ActivateCell(horseCell);
+                //     break;
 
-                case "g": // Goal
-                    cellType = CellType.Carrot;
-                    SetCellImageSize(carrotCell);
-                    ActivateCell(defaultCell);
-                    ActivateCell(carrotCell);
-                    break;
+                // case "g": // Goal
+                //     cellType = CellType.Carrot;
+                //     SetCellImageSize(carrotCell);
+                //     ActivateCell(defaultCell);
+                //     ActivateCell(carrotCell);
+                //     break;
             }
 
             ChangeButtonInteractable(false);

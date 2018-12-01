@@ -26,6 +26,12 @@ namespace Games.HorseLabyrinth
         //     ResetAllElement();
         //     StartCoroutine(CreateBoard());
         // }
+        
+        void Start()
+        {
+            ResetAllElement();
+            StartCoroutine(CreateBoard());
+        }
 
         private void ResetAllElement()
         {
