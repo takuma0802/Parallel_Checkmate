@@ -162,12 +162,12 @@ namespace Games.HorseLabyrinth
             return cell.CellType == CellType.Carrot;
         }
 
-        public IEnumerator SinkCell(bool isUndo)
-        {
-            if (!isUndo) yield return previousCells[previousCells.Count - 2].SinkCell();
+        // public IEnumerator SinkCell(bool isUndo)
+        // {
+        //     if (!isUndo) yield return previousCells[previousCells.Count - 2].SinkCell();
 
-            previousCells[previousCells.Count - 1].OnClickedCell();
-        }
+        //     previousCells[previousCells.Count - 1].OnClickedCell();
+        // }
 
         public void Undo()
         {

@@ -34,17 +34,17 @@ namespace Games.HorseLabyrinth
             if (horseManager) horseManager.DestroyHorse();
         }
 
-        // private IEnumerator CreateBoard()
-        // {
-        //     cellClickedEvent.AddListener(OnCellClicked);
-        //     List<object> boardList = nextQuestion["board"] as List<object>;
-        //     var board = ToStringFromJson(boardList);
+        private IEnumerator CreateBoard()
+        {
+            cellClickedEvent.AddListener(OnCellClicked);
+            //List<object> boardList = nextQuestion["board"] as List<object>;
+            //var board = ToStringFromJson(boardList);
 
-        //     Vector3 horsePos = new Vector3(0, 0, 0);
-        //     yield return boardManager.CreateBoard(pos => horsePos = pos, cellClickedEvent, board);
-        //     yield return CreateHorse(horsePos);
-        //     StartCoroutine(Search());
-        // }
+            Vector3 horsePos = new Vector3(0, 0, 0);
+            //yield return boardManager.CreateBoard(pos => horsePos = pos, cellClickedEvent, board);
+            yield return CreateHorse(horsePos);
+            StartCoroutine(Search());
+        }
 
         // JsonのListから、カンマで区切られたString型配列を返す
         private string[] ToStringFromJson(IList<object> boardList)
@@ -60,13 +60,13 @@ namespace Games.HorseLabyrinth
             return board;
         }
 
-        // private IEnumerator CreateHorse(Vector3 startPos)
-        // {
-        //     var canvas = GetComponentInChildren<Canvas>().gameObject;
-        //     horseManager = ObjectCreator.CreateInObject(canvas, horsePrefab).GetComponent<HorseManager>();
+        private IEnumerator CreateHorse(Vector3 startPos)
+        {
+            var canvas = GetComponentInChildren<Canvas>().gameObject;
+            horseManager = ObjectCreator.CreateInObject(canvas, horsePrefab).GetComponent<HorseManager>();
 
-        //     yield return horseManager.SetHorse(startPos, boardManager.CellSizeRate, boardManager.CoulumnSize);
-        // }
+            yield return horseManager.SetHorse(startPos, boardManager.CellSizeRate, boardManager.CoulumnSize);
+        }
 
         private IEnumerator Search()
         {
@@ -84,24 +84,24 @@ namespace Games.HorseLabyrinth
         private void OnCellClicked(Vector3 targetPos, bool isUndo)
         {
             undoButton.interactable = false;
-            StartCoroutine(CheckAnswer(targetPos, isUndo));
+            //StartCoroutine(CheckAnswer(targetPos, isUndo));
         }
 
-        private IEnumerator CheckAnswer(Vector3 targetPos, bool isUndo)
-        {
-            yield return horseManager.MoveHorse(targetPos, isUndo);
-            var correct = boardManager.CheckAnswer();
-            if (correct)
-            {
-                // OnClickAnswer();
-                // yield return SubmitAnswer(correct, null);
-            }
-            else
-            {
-                yield return boardManager.SinkCell(isUndo);
-                StartCoroutine(Search());
-            }
-        }
+        // private IEnumerator CheckAnswer(Vector3 targetPos, bool isUndo)
+        // {
+        //     yield return horseManager.MoveHorse(targetPos, isUndo);
+        //     var correct = boardManager.CheckAnswer();
+        //     if (correct)
+        //     {
+        //         // OnClickAnswer();
+        //         // yield return SubmitAnswer(correct, null);
+        //     }
+        //     else
+        //     {
+        //         yield return boardManager.SinkCell(isUndo);
+        //         StartCoroutine(Search());
+        //     }
+        // }
 
         public void OnClickUndoButton()
         {

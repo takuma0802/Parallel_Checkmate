@@ -151,18 +151,18 @@ namespace Games.HorseLabyrinth
             cell.GetComponentInChildren<Image>().DOFade(1f, 0.01f);
         }
 
-        public IEnumerator SinkCell()
-        {
-            cellType = CellType.Fall;
-            RectTransform previousCell = horseCell.GetComponent<RectTransform>();
-            sequence = DOTween.Sequence()
-                .Append(previousCell.DOShakePosition(0.4f, 15, 10))
-                .Append(previousCell.DOScale(new Vector3(0f, 0f, 0f), 0.5f))
-                .Join(previousCell.GetComponentInChildren<Image>().DOFade(0f, 0.4f))
-                .InsertCallback(0.6f, () => fallCell.SetActive(true))
-                .InsertCallback(0.7f, () => horseCell.SetActive(false));
+        // public IEnumerator SinkCell()
+        // {
+        //     cellType = CellType.Fall;
+        //     RectTransform previousCell = horseCell.GetComponent<RectTransform>();
+        //     sequence = DOTween.Sequence()
+        //         .Append(previousCell.DOShakePosition(0.4f, 15, 10))
+        //         .Append(previousCell.DOScale(new Vector3(0f, 0f, 0f), 0.5f))
+        //         .Join(previousCell.GetComponentInChildren<Image>().DOFade(0f, 0.4f))
+        //         .InsertCallback(0.6f, () => fallCell.SetActive(true))
+        //         .InsertCallback(0.7f, () => horseCell.SetActive(false));
 
-            yield return null;
-        }
+        //     yield return null;
+        // }
     }
 }
