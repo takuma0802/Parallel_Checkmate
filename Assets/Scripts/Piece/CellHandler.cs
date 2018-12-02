@@ -7,7 +7,7 @@ using DG.Tweening;
 public enum CellType
 {
     Default,
-    Selected,
+    Putted,
     Maker
 }
 
@@ -61,7 +61,7 @@ public class CellHandler : MonoBehaviour
         {
             case CellType.Default: // Default
                 break;
-            case CellType.Selected: // Selected
+            case CellType.Putted: // Putted
                 break;
             case CellType.Maker: // Marker
                 break;
@@ -98,7 +98,7 @@ public class CellHandler : MonoBehaviour
         if (sequence != null) sequence.Kill();
         ChangeDefault(selectedCell);
 
-        cellType = CellType.Selected;
+        cellType = CellType.Putted;
         defaultCell.SetActive(false);
         selectedCell.SetActive(true);
     }

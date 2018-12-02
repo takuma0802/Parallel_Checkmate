@@ -16,14 +16,15 @@ public class GameManager : MonoBehaviour
 
     [SerializeField] GameStateUI stateUI;
     [SerializeField] BoardManager boardManager;
-    private PlayerManager playerManager;
+    [SerializeField] PlayerManager playerManager;
 
 
     void Start()
     {
         playerManager = GetComponent<PlayerManager>();
         if(!playerManager) gameObject.AddComponent<PlayerManager>();
-        
+        if(!boardManager) GameObject.FindObjectOfType<BoardManager>();
+
         CurrentState.Subscribe(state =>
             {
                 //state.Red();
@@ -31,9 +32,6 @@ public class GameManager : MonoBehaviour
             });
     }
 
-    /// <summary>
-    /// ステートが変移した
-    /// </summary>
     void OnStateChanged(GameState nextState)
     {
         stateUI.ActivateStateUI(CurrentState.Value);
@@ -68,7 +66,7 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator InitializeCoroutine()
     {
-        playerManager.InitializePlayer();
+        yield return playerManager.InitializePlayer(boardManager);
         yield return boardManager.CreateBoard();
 
         // 画面がタップされるまで待つ
@@ -81,6 +79,7 @@ public class GameManager : MonoBehaviour
     // Player確認UI表示
     private IEnumerator ReadyCoroutine()
     {
+        yield return new WaitForSeconds(1.0f);
         // 画面がタップされるまで待つ
         yield return stateUI.NextStateButton.OnClickAsObservable().First().ToYieldInstruction();
         stateUI.DeactivateStateUI();
@@ -93,12 +92,11 @@ public class GameManager : MonoBehaviour
         {
             CurrentState.Value = GameState.Player2;
         }
-
-        yield return new WaitForSeconds(1.0f);
     }
 
     private IEnumerator StrategyTimeCoroutine()
     {
+        yield return new WaitForSeconds(1.0f);
         stateUI.DeactivateStateUI();
         
         // 戦略タイム

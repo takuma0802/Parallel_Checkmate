@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public struct PlayerAction {
-	public PieceType pieceType;
-	public int row;
-	public int column;
-	public PieceAction action;
+	public PieceBase Piece;
+	public int CurrentRow;
+	public int CurrentColumn;
+	public int NextRow;
+	public int NextColumn;
+	public PieceAction Action;
 }

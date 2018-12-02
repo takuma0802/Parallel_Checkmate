@@ -37,6 +37,7 @@ GameObject:
   serializedVersion: 5
   m_Component:
   - component: {fileID: 224919964722999156}
+  - component: {fileID: 114642884832785462}
   m_Layer: 0
   m_Name: Piece2
   m_TagString: Untagged
@@ -61,6 +62,18 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &114642884832785462
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1658280320837574}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47370ec7802704e7abf7c16034538318, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  pieceButton: {fileID: 114671622585134268}
 --- !u!114 &114671622585134268
 MonoBehaviour:
   m_ObjectHideFlags: 1

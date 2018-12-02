@@ -5,6 +5,7 @@ using UnityEngine;
 using System.Linq;
 using UnityEngine.UI;
 using UnityEngine.Events;
+using UniRx;
 
 public class BoardManager : MonoBehaviour
 {
@@ -23,9 +24,12 @@ public class BoardManager : MonoBehaviour
     private float cellSizeHeight;
 
     // Cell周り
+    // column * row
     private CellHandler[,] cells;
     private List<CellHandler> previousCells = new List<CellHandler>();
     private List<CellHandler> observedCells = new List<CellHandler>();
+
+    private PlayerAction playerAction;
 
     public float CellSizeRate
     {
@@ -89,60 +93,6 @@ public class BoardManager : MonoBehaviour
         // King置け
     }
 
-    //// Answering
-    //置ける場所はMax8箇所なので、8箇所全て調べる
-    // public IEnumerator SearchMovePoint()
-    // {
-    //     if (CanPut(horseRow + 2, horseColumn - 1)) ObserveCells(cells[horseRow + 2, horseColumn - 1]);
-    //     if (CanPut(horseRow + 2, horseColumn + 1)) ObserveCells(cells[horseRow + 2, horseColumn + 1]);
-    //     if (CanPut(horseRow - 2, horseColumn - 1)) ObserveCells(cells[horseRow - 2, horseColumn - 1]);
-    //     if (CanPut(horseRow - 2, horseColumn + 1)) ObserveCells(cells[horseRow - 2, horseColumn + 1]);
-    //     if (CanPut(horseRow + 1, horseColumn + 2)) ObserveCells(cells[horseRow + 1, horseColumn + 2]);
-    //     if (CanPut(horseRow - 1, horseColumn + 2)) ObserveCells(cells[horseRow - 1, horseColumn + 2]);
-    //     if (CanPut(horseRow + 1, horseColumn - 2)) ObserveCells(cells[horseRow + 1, horseColumn - 2]);
-    //     if (CanPut(horseRow - 1, horseColumn - 2)) ObserveCells(cells[horseRow - 1, horseColumn - 2]);
-    //     yield return null;
-    // }
-
-    // // 指定したCellに駒を置ける状況かどうかを判定する
-    // public bool CanPut(int row, int column)
-    // {
-    //     var isInside = 0 <= row && row < columnSize && 0 <= column && column < columnSize;
-    //     if (!isInside) return false;
-
-    //     var canPut = cells[row, column].CellType == CellType.Default || cells[row, column].CellType == CellType.Carrot;
-    //     return canPut;
-    // }
-
-    private void ObserveCells(CellHandler cell)
-    {
-        cell.ChangeButtonInteractable(true);
-        cell.ChangeAvailableMarker(true);
-        observedCells.Add(cell);
-        //cell.CellButton.onClick.AddListener(() => OnClickedCellButton(cell));
-    }
-
-    private void OnClickedCellButton(CellHandler cell)
-    {
-        RemoveAllBtnAction();
-
-        // previousCells.Add(cell);
-        // horseRow = cell.Row;
-        // horseColumn = cell.Column;
-        // horsePosition = cell.gameObject.transform.localPosition;
-        // cellClickedEvent.Invoke(horsePosition, false);
-    }
-
-    // 監視されているButtonの監視を解除する
-    public void RemoveAllBtnAction()
-    {
-        // foreach (var cell in observedCells)
-        // {
-        //     cell.ChangeAvailableMarker(false);
-        //     cell.ChangeButtonInteractable(false);
-        //     cell.CellButton.onClick.RemoveAllListeners();
-        // }
-    }
 
     public void Undo()
     {
@@ -152,10 +102,135 @@ public class BoardManager : MonoBehaviour
         RemoveAllBtnAction();
         previousCells[previousCells.Count - 1].ChangeToDefault();
         previousCells.RemoveAt(previousCells.Count - 1);
-        // horseRow = preCell.Row;
-        // horseColumn = preCell.Column;
-        // horsePosition = preCell.gameObject.transform.localPosition;
-        // cellClickedEvent.Invoke(horsePosition, true);
     }
 
+    public Vector2 ReturnCellLocalPosition(int column, int row)
+    {
+        return cells[column, row].gameObject.transform.localPosition;
+    }
+
+    public void SearchMovePoint(PlayerAction playerAction, bool onBoard)
+    {
+        this.playerAction = playerAction;
+        
+        if (!onBoard)
+        {
+            SearchMovePointOfHolding(playerAction.Piece.Player);
+        }
+        else
+        {
+            var type = playerAction.Piece.PieceType;
+            var column = playerAction.CurrentColumn;
+            var row = playerAction.CurrentRow;
+
+            switch (type)
+            {
+                case PieceType.Piece1:
+                    SearchMovePointOfPiece1(column, row);
+                    break;
+                case PieceType.Piece2:
+                    SearchMovePointOfPiece2(column, row);
+                    break;
+                case PieceType.Piece3:
+                    SearchMovePointOfPiece3(column, row);
+                    break;
+                case PieceType.Piece4:
+                    SearchMovePointOfPiece4(column, row);
+                    break;
+                case PieceType.Piece5:
+                    SearchMovePointOfPiece5(column, row);
+                    break;
+            }
+        }
+    }
+
+    // 指定したCellに駒を置ける状況かどうかを判定する
+    public bool CanPut(int row, int column)
+    {
+        var isInside = 0 <= row && row < columnSize && 0 <= column && column < columnSize;
+        if (!isInside) return false;
+
+        var canPut = cells[column, row].CellType == CellType.Default;
+        return canPut;
+    }
+
+    private void SearchMovePointOfHolding(PlayerType player)
+    {
+        if (player == PlayerType.Player1)
+        {
+            ObserveCells(cells[0, 0]);
+            ObserveCells(cells[0, 1]);
+            ObserveCells(cells[0, 2]);
+            ObserveCells(cells[1, 0]);
+            ObserveCells(cells[1, 1]);
+            ObserveCells(cells[1, 2]);
+        }
+        else
+        {
+            ObserveCells(cells[6,0]);
+            ObserveCells(cells[6,1]);
+            ObserveCells(cells[6,2]);
+            ObserveCells(cells[7,0]);
+            ObserveCells(cells[7,1]);
+            ObserveCells(cells[7,2]);
+        }
+    }
+
+    private void SearchMovePointOfPiece1(int row, int column)
+    {
+    }
+    private void SearchMovePointOfPiece2(int row, int column)
+    {
+    }
+    private void SearchMovePointOfPiece3(int row, int column)
+    {
+        if (CanPut(column + 2, row - 1)) ObserveCells(cells[column + 2, row - 1]);
+        if (CanPut(column + 2, row + 1)) ObserveCells(cells[column + 2, row + 1]);
+        if (CanPut(column - 2, row - 1)) ObserveCells(cells[column - 2, row - 1]);
+        if (CanPut(column - 2, row + 1)) ObserveCells(cells[column - 2, row + 1]);
+        if (CanPut(column + 1, row + 2)) ObserveCells(cells[column + 1, row + 2]);
+        if (CanPut(column - 1, row + 2)) ObserveCells(cells[column - 1, row + 2]);
+        if (CanPut(column + 1, row - 2)) ObserveCells(cells[column + 1, row - 2]);
+        if (CanPut(column - 1, row - 2)) ObserveCells(cells[column - 1, row - 2]);
+    }
+    private void SearchMovePointOfPiece4(int row, int column)
+    {
+
+    }
+    private void SearchMovePointOfPiece5(int row, int column)
+    {
+
+    }
+
+    private void ObserveCells(CellHandler cell)
+    {
+        cell.ChangeButtonInteractable(true);
+        cell.ChangeAvailableMarker(true);
+        observedCells.Add(cell);
+        cell.CellButton.onClick.AddListener(() => OnClickedCellButton(cell));
+    }
+
+    private void OnClickedCellButton(CellHandler cell)
+    {
+        RemoveAllBtnAction();
+        playerAction.NextColumn = cell.Column;
+        playerAction.NextRow = cell.Row;
+        playerAction.Action = PieceAction.Move;
+
+        MessageBroker.Default.Publish(playerAction);
+
+        // previousCells.Add(cell);
+
+    }
+
+    // 監視されているButtonの監視を解除する
+    public void RemoveAllBtnAction()
+    {
+        foreach (var cell in observedCells)
+        {
+            cell.ChangeAvailableMarker(false);
+            cell.ChangeButtonInteractable(false);
+            cell.CellButton.onClick.RemoveAllListeners();
+        }
+    }
 }
