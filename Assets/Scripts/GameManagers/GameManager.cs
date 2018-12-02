@@ -4,6 +4,7 @@ using UnityEngine;
 using UniRx;
 using System;
 using UnityEngine.UI;
+using DG.Tweening;
 
 public class GameManager : MonoBehaviour
 {
@@ -13,11 +14,16 @@ public class GameManager : MonoBehaviour
     public GameStateReactiveProperty PreviousState
             = new GameStateReactiveProperty(GameState.Player2);
 
-	public GameObject StateUI;
-	public Button NextStateButton;
+    [SerializeField] GameStateUI stateUI;
+    [SerializeField] BoardManager boardManager;
+    private PlayerManager playerManager;
+
 
     void Start()
     {
+        playerManager = GetComponent<PlayerManager>();
+        if(!playerManager) gameObject.AddComponent<PlayerManager>();
+        
         CurrentState.Subscribe(state =>
             {
                 //state.Red();
@@ -30,6 +36,8 @@ public class GameManager : MonoBehaviour
     /// </summary>
     void OnStateChanged(GameState nextState)
     {
+        stateUI.ActivateStateUI(CurrentState.Value);
+
         switch (nextState)
         {
             case GameState.Initializing:
@@ -39,12 +47,10 @@ public class GameManager : MonoBehaviour
                 StartCoroutine(ReadyCoroutine());
                 break;
             case GameState.Player1:
-                StartCoroutine(StrategyTimeCoroutine(GameState.Player1));
-                PreviousState.Value = GameState.Player1;
+                StartCoroutine(StrategyTimeCoroutine());
                 break;
             case GameState.Player2:
-                StartCoroutine(StrategyTimeCoroutine(GameState.Player2));
-                PreviousState.Value = GameState.Player2;
+                StartCoroutine(StrategyTimeCoroutine());
                 break;
             case GameState.Battle:
                 StartCoroutine(Battle());
@@ -62,12 +68,12 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator InitializeCoroutine()
     {
-        // ルール説明画像表示
-
-        //
+        playerManager.InitializePlayer();
+        yield return boardManager.CreateBoard();
 
         // 画面がタップされるまで待つ
-        yield return NextStateButton.OnClickAsObservable().First().ToYieldInstruction();
+        yield return stateUI.NextStateButton.OnClickAsObservable().First().ToYieldInstruction();
+        stateUI.DeactivateStateUI();
 
         CurrentState.Value = GameState.Ready;
     }
@@ -75,37 +81,45 @@ public class GameManager : MonoBehaviour
     // Player確認UI表示
     private IEnumerator ReadyCoroutine()
     {
-        // PreviousStateに応じて、"Player ◯ のターン"と表示
-
         // 画面がタップされるまで待つ
-        yield return null;
+        yield return stateUI.NextStateButton.OnClickAsObservable().First().ToYieldInstruction();
+        stateUI.DeactivateStateUI();
 
-        CurrentState.Value = GameState.Player1;
+        if (PreviousState.Value == GameState.Player2)
+        {
+            CurrentState.Value = GameState.Player1;
+        }
+        else if (PreviousState.Value == GameState.Player1)
+        {
+            CurrentState.Value = GameState.Player2;
+        }
+
+        yield return new WaitForSeconds(1.0f);
     }
 
-    private IEnumerator StrategyTimeCoroutine(GameState gameState)
+    private IEnumerator StrategyTimeCoroutine()
     {
-        // タイマー作動
+        stateUI.DeactivateStateUI();
+        
+        // 戦略タイム
+        yield return playerManager.StartStrategy(CurrentState.Value);
 
-        // コストを管理する
-
-        // Stateに応じて、そのPlayerの駒をタッチ可能にする
-
-        // 決定ボタンが押される or 制限時間が過ぎるまで待つ
-        yield return null;
-
-        if (gameState == GameState.Player1)
+        if (CurrentState.Value == GameState.Player1)
         {
+            PreviousState.Value = GameState.Player1;
             CurrentState.Value = GameState.Ready;
         }
-        else if (gameState == GameState.Player2)
+        else if (CurrentState.Value == GameState.Player2)
         {
+            PreviousState.Value = GameState.Player2;
             CurrentState.Value = GameState.Battle;
         }
     }
 
     private IEnumerator Battle()
     {
+        yield return new WaitForSeconds(2.0f);
+        stateUI.DeactivateStateUI();
         // 移動を行う
 
         // 攻撃を行う
@@ -113,20 +127,23 @@ public class GameManager : MonoBehaviour
         // 破壊を行う
 
         // 全て終わるまで待機
-        yield return null;
+        yield return new WaitForSeconds(3.0f);
 
         CurrentState.Value = GameState.Result;
     }
 
     private IEnumerator Result()
     {
+        yield return new WaitForSeconds(2.0f);
+        stateUI.DeactivateStateUI();
         // 王様が生きているかチェック
 
         // 両方生きてたら、次はReady
 
-		// 王様が死んでたら、次はFinished
+        // 王様が死んでたら、次はFinished
 
-        yield return null;
+        yield return new WaitForSeconds(3.0f);
+        CurrentState.Value = GameState.Finished;
     }
 
     private void Finished()
