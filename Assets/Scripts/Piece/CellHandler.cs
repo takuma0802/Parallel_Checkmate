@@ -43,11 +43,11 @@ public class CellHandler : MonoBehaviour
         get { return column; }
     }
 
-    public IEnumerator SetCell(int row, int column, CellType cellType, float cellSizeRate, int columnSize)
+    public IEnumerator SetCell(int row, int column, CellType cellType, int columnSize)
     {
         this.row = row;
         this.column = column;
-        this.cellSizeRate = cellSizeRate;
+        //this.cellSizeRate = cellSizeRate;
         this.columnSize = columnSize;
         this.gameObject.name = row.ToString() + "-" + column.ToString();
         this.cellType = cellType;
@@ -68,19 +68,19 @@ public class CellHandler : MonoBehaviour
         }
 
         ChangeButtonInteractable(false);
-        SetCellImageSize(markerCell);
+        //SetCellImageSize(markerCell);
     }
 
-    private void SetCellImageSize(GameObject cell)
-    {
-        float newSize = 252 * cellSizeRate;
-        int buffer = 40 - (5 * (columnSize - 3));
-        cell.GetComponent<RectTransform>().sizeDelta = new Vector3(newSize, newSize);
-        cell.GetComponent<RectTransform>().localPosition = new Vector3(0, buffer);
+    // private void SetCellImageSize(GameObject cell)
+    // {
+    //     float newSize = 252 * cellSizeRate;
+    //     int buffer = 40 - (5 * (columnSize - 3));
+    //     cell.GetComponent<RectTransform>().sizeDelta = new Vector3(newSize, newSize);
+    //     cell.GetComponent<RectTransform>().localPosition = new Vector3(0, buffer);
 
-        var image = cell.GetComponentInChildren<Image>(true).gameObject;
-        image.GetComponent<RectTransform>().sizeDelta = new Vector2(newSize, newSize);
-    }
+    //     var image = cell.GetComponentInChildren<Image>(true).gameObject;
+    //     image.GetComponent<RectTransform>().sizeDelta = new Vector2(newSize, newSize);
+    // }
 
     public void ChangeButtonInteractable(bool enable)
     {

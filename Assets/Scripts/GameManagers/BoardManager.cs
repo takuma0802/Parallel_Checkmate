@@ -13,15 +13,15 @@ public class BoardManager : MonoBehaviour
     public int rowSize;
 
     [SerializeField] private GameObject cellPrefab;
+    [SerializeField] private GameObject backGround;
 
     // Size周り
-    private Dictionary<int, float> cellSizeRateDict = new Dictionary<int, float>(){
-			// key: column count, value: cell size Rate
-            {3, 1f}, {4, 0.79f}, {5, 0.68f}, {6, 0.61f}, {8, 0.8f}};
-    private float defaultCellSizeWidth = 252f;
-    private float defaultCellSizeHeight = 308f;
-    private float cellSizeWidth;
-    private float cellSizeHeight;
+    // private Dictionary<int, float> cellSizeRateDict = new Dictionary<int, float>(){
+    // 		// key: column count, value: cell size Rate
+    //         {3, 1f}, {4, 0.79f}, {5, 0.68f}, {6, 0.61f}, {8, 0.8f}};
+    private float cellSize = 100f;
+    // private float cellSizeWidth;
+    // private float cellSizeHeight;
 
     // Cell周り
     // column * row
@@ -31,10 +31,10 @@ public class BoardManager : MonoBehaviour
 
     private PlayerAction playerAction;
 
-    public float CellSizeRate
-    {
-        get { return cellSizeRateDict[columnSize]; }
-    }
+    // public float CellSizeRate
+    // {
+    //     get { return cellSizeRateDict[columnSize]; }
+    // }
 
     public int CoulumnSize
     {
@@ -50,13 +50,10 @@ public class BoardManager : MonoBehaviour
     {
         ResetBoard();
         // 初期化
+        ObjectCreator.CreateInObject(this.gameObject, backGround);
         cells = new CellHandler[columnSize, rowSize];
-        cellSizeWidth = defaultCellSizeWidth * CellSizeRate;
-        cellSizeHeight = defaultCellSizeHeight * CellSizeRate;
-        var spacing = -70 * CellSizeRate;
 
-        GetComponent<GridLayoutGroup>().cellSize = new Vector2(cellSizeWidth, cellSizeHeight);
-        GetComponent<GridLayoutGroup>().spacing = new Vector2(0, spacing);
+        GetComponent<GridLayoutGroup>().cellSize = new Vector2(cellSize, cellSize);
         GetComponent<GridLayoutGroup>().constraintCount = columnSize;
 
         for (int row = 0; row < rowSize; row++)
@@ -82,7 +79,7 @@ public class BoardManager : MonoBehaviour
     private IEnumerator CreateCell(CellType cellType, int row, int column)
     {
         CellHandler cell = ObjectCreator.CreateInObject(this.gameObject, cellPrefab).GetComponent<CellHandler>();
-        yield return cell.SetCell(row, column, cellType, CellSizeRate, columnSize);
+        yield return cell.SetCell(row, column, cellType, columnSize);
         cells[column, row] = cell;
 
         yield return null;
@@ -112,7 +109,7 @@ public class BoardManager : MonoBehaviour
     public void SearchMovePoint(PlayerAction playerAction, bool onBoard)
     {
         this.playerAction = playerAction;
-        
+
         if (!onBoard)
         {
             SearchMovePointOfHolding(playerAction.Piece.Player);
@@ -167,12 +164,12 @@ public class BoardManager : MonoBehaviour
         }
         else
         {
-            ObserveCells(cells[6,0]);
-            ObserveCells(cells[6,1]);
-            ObserveCells(cells[6,2]);
-            ObserveCells(cells[7,0]);
-            ObserveCells(cells[7,1]);
-            ObserveCells(cells[7,2]);
+            ObserveCells(cells[6, 0]);
+            ObserveCells(cells[6, 1]);
+            ObserveCells(cells[6, 2]);
+            ObserveCells(cells[7, 0]);
+            ObserveCells(cells[7, 1]);
+            ObserveCells(cells[7, 2]);
         }
     }
 

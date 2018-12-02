@@ -119,6 +119,7 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(2.0f);
         stateUI.DeactivateStateUI();
         // 移動を行う
+        //yield return PlayerManager.
 
         // 攻撃を行う
 
@@ -141,7 +142,7 @@ public class GameManager : MonoBehaviour
         // 王様が死んでたら、次はFinished
 
         yield return new WaitForSeconds(3.0f);
-        CurrentState.Value = GameState.Finished;
+        CurrentState.Value = GameState.Ready;
     }
 
     private void Finished()
