@@ -29,6 +29,7 @@ public class PlayerManager : MonoBehaviour
     // そのターンのP１とP２のActionを登録
     private List<PlayerAction> playerActions = new List<PlayerAction>();
     private PlayerAction playerAction;
+    private List<PieceBase> destroyObjects = new List<PieceBase>();
 
 
     // 0:Piece1/ 1:Piece2/ 2:Piece3...
@@ -95,13 +96,13 @@ public class PlayerManager : MonoBehaviour
             {
                 if (x.Player == PlayerType.Player1)
                 {
-                    // PiecesObject1[x.Piece.PieceNum]
+                    PiecesObject1[x.Piece.PieceNum].ChangeAttackIcon(true);
                     print("P1Attack！");
                 }
                 else if (x.Player == PlayerType.Player2)
                 {
-                    //PutPieceUI(PiecesObject2[x.Piece.PieceNum].gameObject, x.NextColumn, x.NextRow);
-                    print("P1Attack！");
+                    PiecesObject2[x.Piece.PieceNum].ChangeAttackIcon(true);
+                    print("P2Attack！");
                 }
             }
 
@@ -308,11 +309,11 @@ public class PlayerManager : MonoBehaviour
     // 手札周り
     private void SetHoldingPieceUI(PieceBase[] pieces)
     {
-        int piece1num = pieces.Where(i => i.PieceType == PieceType.Piece1 && !i.IsPutted).Count();
-        int piece2num = pieces.Where(i => i.PieceType == PieceType.Piece2 && !i.IsPutted).Count();
-        int piece3num = pieces.Where(i => i.PieceType == PieceType.Piece3 && !i.IsPutted).Count();
-        int piece4num = pieces.Where(i => i.PieceType == PieceType.Piece4 && !i.IsPutted).Count();
-        int piece5num = pieces.Where(i => i.PieceType == PieceType.Piece5 && !i.IsPutted).Count();
+        int piece1num = pieces.Where(i => i.PieceType == PieceType.Piece1 && !i.IsPutted && !i.IsDestroyed).Count();
+        int piece2num = pieces.Where(i => i.PieceType == PieceType.Piece2 && !i.IsPutted && !i.IsDestroyed).Count();
+        int piece3num = pieces.Where(i => i.PieceType == PieceType.Piece3 && !i.IsPutted && !i.IsDestroyed).Count();
+        int piece4num = pieces.Where(i => i.PieceType == PieceType.Piece4 && !i.IsPutted && !i.IsDestroyed).Count();
+        int piece5num = pieces.Where(i => i.PieceType == PieceType.Piece5 && !i.IsPutted && !i.IsDestroyed).Count();
 
         holdingPieceImage[0].sprite = pieceNumberImage[piece1num];
         holdingPieceImage[1].sprite = pieceNumberImage[piece2num];
@@ -388,7 +389,7 @@ public class PlayerManager : MonoBehaviour
         {
             if (pieceNum < 0) // 手札から選択
             {
-                var num = PiecesObject1.Where(x => x.PieceType == pieceType && !Pieces1[x.PieceNum].IsPutted).FirstOrDefault().PieceNum;
+                var num = PiecesObject1.Where(x => x.PieceType == pieceType && !Pieces1[x.PieceNum].IsPutted && !Pieces1[x.PieceNum].IsDestroyed).FirstOrDefault().PieceNum;
                 playerAction.Piece = Pieces1[num];
                 playerAction.OnBoard = false;
                 boardManager.SearchMovePoint(playerAction, false);
@@ -407,7 +408,7 @@ public class PlayerManager : MonoBehaviour
         {
             if (pieceNum < 0) // 手札から選択
             {
-                var num = PiecesObject2.Where(x => x.PieceType == pieceType && !Pieces2[x.PieceNum].IsPutted).FirstOrDefault().PieceNum;
+                var num = PiecesObject2.Where(x => x.PieceType == pieceType && !Pieces2[x.PieceNum].IsPutted && !Pieces2[x.PieceNum].IsDestroyed).FirstOrDefault().PieceNum;
                 playerAction.Piece = Pieces2[num];
                 playerAction.OnBoard = false;
                 boardManager.SearchMovePoint(playerAction, false);
@@ -440,6 +441,7 @@ public class PlayerManager : MonoBehaviour
     {
         _compositeDisposable.Clear();
         boardManager.RemoveAllBtnAction();
+        //PiecesObject1[x.Piece.PieceNum].ChangeAttackIcon(false);
     }
 
     private IEnumerator UndoActions()
@@ -448,32 +450,45 @@ public class PlayerManager : MonoBehaviour
         var reverseAction = playerActions.AsEnumerable().Reverse();
         foreach (PlayerAction x in reverseAction)
         {
-            if (x.Action == PieceAction.Attack) continue;
-
-            if (x.Player == PlayerType.Player1)
+            if (x.Action == PieceAction.Attack)
             {
-                if (!x.OnBoard)
+                if (x.Player == PlayerType.Player1)
                 {
-                    ChangeActiveUI(PiecesObject1[x.Piece.PieceNum].gameObject, false);
-                    PutPieceInfo(x.Piece, 0, 0, false);
+                    PiecesObject1[x.Piece.PieceNum].ChangeAttackIcon(false);
                 }
-                else
+                else if (x.Player == PlayerType.Player2)
                 {
-                    PutPieceUI(PiecesObject1[x.Piece.PieceNum].gameObject, x.CurrentColumn, x.CurrentRow);
-                    PutPieceInfo(x.Piece, x.CurrentColumn, x.CurrentRow, true);
+                    PiecesObject2[x.Piece.PieceNum].ChangeAttackIcon(false);
                 }
             }
-            else if (x.Player == PlayerType.Player2)
+
+            if (x.Action == PieceAction.Move)
             {
-                if (!x.OnBoard)
+                if (x.Player == PlayerType.Player1)
                 {
-                    ChangeActiveUI(PiecesObject2[x.Piece.PieceNum].gameObject, false);
-                    PutPieceInfo(x.Piece, 0, 0, false);
+                    if (!x.OnBoard)
+                    {
+                        ChangeActiveUI(PiecesObject1[x.Piece.PieceNum].gameObject, false);
+                        PutPieceInfo(x.Piece, 0, 0, false);
+                    }
+                    else
+                    {
+                        PutPieceUI(PiecesObject1[x.Piece.PieceNum].gameObject, x.CurrentColumn, x.CurrentRow);
+                        PutPieceInfo(x.Piece, x.CurrentColumn, x.CurrentRow, true);
+                    }
                 }
-                else
+                else if (x.Player == PlayerType.Player2)
                 {
-                    PutPieceUI(PiecesObject2[x.Piece.PieceNum].gameObject, x.CurrentColumn, x.CurrentRow);
-                    PutPieceInfo(x.Piece, x.CurrentColumn, x.CurrentRow, true);
+                    if (!x.OnBoard)
+                    {
+                        ChangeActiveUI(PiecesObject2[x.Piece.PieceNum].gameObject, false);
+                        PutPieceInfo(x.Piece, 0, 0, false);
+                    }
+                    else
+                    {
+                        PutPieceUI(PiecesObject2[x.Piece.PieceNum].gameObject, x.CurrentColumn, x.CurrentRow);
+                        PutPieceInfo(x.Piece, x.CurrentColumn, x.CurrentRow, true);
+                    }
                 }
             }
         }
@@ -482,8 +497,9 @@ public class PlayerManager : MonoBehaviour
 
     private void OnClickUndoButton()
     {
-        DisposeAllStream();
         if (playerActions.Count == 0) return;
+
+        DisposeAllStream();
         var x = playerActions.Last();
 
         if (x.Action == PieceAction.Move)
@@ -559,74 +575,215 @@ public class PlayerManager : MonoBehaviour
                     PutPieceInfo(x.Piece, x.NextColumn, x.NextRow, true);
                 }
             }
-            yield return new WaitForSeconds(0.5f);
+            yield return new WaitForSeconds(1f);
         }
     }
 
     public IEnumerator ExcecuteMoveDestroy()
     {
-        if (playerActions.Count == 0) yield return null;
+        Debug.Log("ExcecuteMoveDestroy");
+        if (playerActions.Count == 0) yield break;
 
-        var puttedPieces1 = Pieces1.Where(i => i.IsPutted && !i.IsDestroyed).ToArray();
-        Debug.Log(puttedPieces1.Length);
+        PieceBase[] puttedPieces1 = Pieces1.Where(i => i.IsPutted && !i.IsDestroyed).ToArray();
+        PieceBase[] puttedPieces2 = Pieces2.Where(i => i.IsPutted && !i.IsDestroyed).ToArray();
 
-        // for (int i = 0; i < 8; i++)
-        // {
-        //     Debug.Log(playerActions.Where(x => x.NextColumn == i).Count());
-        //     if(playerActions.Where(x => x.NextColumn == i).Count() > 1)
-        //     {
+        int[] uniqeNum1 = puttedPieces1.Select(i => i.Row * 8 + i.Column).ToArray();
+        int[] uniqeNum2 = puttedPieces2.Select(i => i.Row * 8 + i.Column).ToArray();
 
-        //     }
-        // }
+        for (int num1 = 0; num1 < uniqeNum1.Length; num1++)
+        {
+            for (int num2 = 0; num2 < uniqeNum2.Length; num2++)
+            {
+                if (uniqeNum1[num1] != uniqeNum2[num2]) continue;
 
+                if (puttedPieces1[num1].PieceCost > puttedPieces2[num2].PieceCost)
+                {
+                    destroyObjects.Add(puttedPieces2[num2]);
+                }
+                else if (puttedPieces1[num1].PieceCost == puttedPieces2[num2].PieceCost)
+                {
+                    destroyObjects.Add(puttedPieces1[num1]);
+                    destroyObjects.Add(puttedPieces2[num2]);
+                }
+                else
+                {
+                    destroyObjects.Add(puttedPieces1[num1]);
+                }
+            }
+        }
 
-        // List<CellHandler> puttedCells = boardManager.ReturnPuttedCellList();
-        // Debug.Log("puttedCell"+puttedCells.Count);
-        // // 現在の置かれているPieceを更新
-        // SearchPuttedPieces(Pieces1);
-        // SearchPuttedPieces(Pieces2);
-
-        // Debug.Log("puttedPiece"+puttedPieces.Count);
-        // foreach(CellHandler cell in puttedCells)
-        // {
-        //     var count = puttedPieces.Where(x => x.Row == cell.Row && x.Column == cell.Column).Count();
-        //     Debug.Log("count:"+count);
-        //     if(count > 1)
-        //     {
-
-        //     };
-        // }
-
-
-
+        foreach (PieceBase piece in destroyObjects)
+        {
+            Debug.Log(piece.Player + "の" + piece.PieceType + " " + piece.PieceNum + "をDestroy");
+            DestroyPiece(piece);
+        }
+        destroyObjects.Clear();
         yield return new WaitForSeconds(1.0f);
+    }
+
+    private void DestroyPiece(PieceBase piece)
+    {
+        puttedPieces.Remove(piece);
+        piece.IsDestroyed = true;
+        PutPieceInfo(piece, -1, -1, false);
+        if (piece.Player == PlayerType.Player1)
+        {
+            ChangeActiveUI(PiecesObject1[piece.PieceNum].gameObject, false);
+        }
+        else if (piece.Player == PlayerType.Player2)
+        {
+            ChangeActiveUI(PiecesObject2[piece.PieceNum].gameObject, false);
+        }
     }
 
     public IEnumerator StartBattle()
     {
+        Debug.Log("StartBattle");
         if (playerActions.Count == 0) yield break;
 
         foreach (PlayerAction x in playerActions)
         {
             if (x.Action == PieceAction.Move) continue;
+            if (x.Piece.IsDestroyed) continue;
 
-            if (x.Player == PlayerType.Player1)
-            {
-                // 
-            }
-            else if (x.Player == PlayerType.Player2)
-            {
-                //   
-            }
-            yield return new WaitForSeconds(0.5f);
+            SearchAttackAvailablePoint(x);
+
+            yield return new WaitForSeconds(1f);
         }
+        yield return new WaitForSeconds(1.0f);
+    }
+
+    public void SearchAttackAvailablePoint(PlayerAction playerAction)
+    {
+        var type = playerAction.Piece.PieceType;
+        var player = playerAction.Player;
+        var column = playerAction.CurrentColumn;
+        var row = playerAction.CurrentRow;
+        Debug.Log("SearchAttackAvailablePoint：" + player + "の" + type + "が攻撃");
+
+        switch (type)
+        {
+            case PieceType.Piece1:
+                CheckAttackPointOfPiece1(column, row, player);
+                break;
+            case PieceType.Piece2:
+                CheckAttackPointOfPiece2(column, row, player);
+                break;
+            case PieceType.Piece3:
+                CheckAttackPointOfPiece3(column, row, player);
+                break;
+            case PieceType.Piece4:
+                CheckAttackPointOfPiece4(column, row, player);
+                break;
+            case PieceType.Piece5:
+                CheckAttackPointOfPiece5(column, row, player);
+                break;
+        }
+    }
+
+    public bool CanAttack(int column, int row)
+    {
+        return boardManager.CanAttack(column, row);
+    }
+
+    private void PieceAttack(int column, int row, PlayerType player)
+    {
+        //UI表示
+        boardManager.AttackAnimation(column, row);
+
+        // このCellに敵がいるかチェックして追加
+        var cellNum = row * 8 + column;
+
+        if (player == PlayerType.Player1)
+        {
+            var pieces = Pieces2.Where(i => i.IsPutted && !i.IsDestroyed).Select(i => i.Row * 8 + i.Column).ToArray();
+            foreach (var pieceNum in pieces)
+            {
+                Debug.Log("pieceNum"+pieceNum);
+                if (pieceNum == cellNum) destroyObjects.Add(Pieces2[pieceNum]);
+            }
+            if (cellNum == 15)
+            {
+                //king[1]死亡
+            }
+        }
+        else if (player == PlayerType.Player2)
+        {
+            var pieces = Pieces1.Where(i => i.IsPutted && !i.IsDestroyed).Select(i => i.Row * 8 + i.Column).ToArray();
+            foreach (var pieceNum in pieces)
+            {
+                Debug.Log("pieceNum"+pieceNum);
+                if (pieceNum == cellNum) destroyObjects.Add(Pieces1[pieceNum]);
+            }
+            if (cellNum == 8)
+            {
+                //king[0]死亡
+            }
+        }
+    }
+
+    private void CheckAttackPointOfPiece1(int column, int row, PlayerType player)
+    {
+        if (player == PlayerType.Player1)
+        {
+            if (CanAttack(column + 1, row)) PieceAttack(column + 1, row, player);
+        }
+        else if (player == PlayerType.Player2)
+        {
+            if (CanAttack(column - 1, row)) PieceAttack(column - 1, row, player);
+        }
+    }
+
+    private void CheckAttackPointOfPiece2(int column, int row, PlayerType player)
+    {
+        if (CanAttack(column + 1, row)) PieceAttack(column + 1, row, player);
+        if (CanAttack(column - 1, row)) PieceAttack(column - 1, row, player);
+        if (CanAttack(column, row + 1)) PieceAttack(column, row + 1, player);
+        if (CanAttack(column, row - 1)) PieceAttack(column, row - 1, player);
+    }
+
+    private void CheckAttackPointOfPiece3(int column, int row, PlayerType player)
+    {
+        if (CanAttack(column + 2, row - 1)) PieceAttack(column + 2, row - 1, player);
+        if (CanAttack(column + 2, row + 1)) PieceAttack(column + 2, row + 1, player);
+        if (CanAttack(column - 2, row - 1)) PieceAttack(column - 2, row - 1, player);
+        if (CanAttack(column - 2, row + 1)) PieceAttack(column - 2, row + 1, player);
+        if (CanAttack(column + 1, row + 2)) PieceAttack(column + 1, row + 2, player);
+        if (CanAttack(column - 1, row + 2)) PieceAttack(column - 1, row + 2, player);
+        if (CanAttack(column + 1, row - 2)) PieceAttack(column + 1, row - 2, player);
+        if (CanAttack(column - 1, row - 2)) PieceAttack(column - 1, row - 2, player);
+    }
+
+    private void CheckAttackPointOfPiece4(int column, int row, PlayerType player)
+    {
+        if (CanAttack(column + 1, row + 1)) PieceAttack(column + 1, row + 1, player);
+        if (CanAttack(column + 1, row - 1)) PieceAttack(column + 1, row - 1, player);
+        if (CanAttack(column - 1, row + 1)) PieceAttack(column - 1, row + 1, player);
+        if (CanAttack(column - 1, row - 1)) PieceAttack(column - 1, row - 1, player);
+    }
+
+    private void CheckAttackPointOfPiece5(int column, int row, PlayerType player)
+    {
+        if (CanAttack(column + 1, row + 1)) PieceAttack(column + 1, row + 1, player);
+        if (CanAttack(column + 1, row - 1)) PieceAttack(column + 1, row - 1, player);
+        if (CanAttack(column + 1, row)) PieceAttack(column + 1, row, player);
+        if (CanAttack(column - 1, row + 1)) PieceAttack(column - 1, row + 1, player);
+        if (CanAttack(column - 1, row - 1)) PieceAttack(column - 1, row - 1, player);
+        if (CanAttack(column - 1, row)) PieceAttack(column - 1, row, player);
+        if (CanAttack(column, row + 1)) PieceAttack(column, row + 1, player);
+        if (CanAttack(column, row - 1)) PieceAttack(column, row - 1, player);
     }
 
     public IEnumerator ExcecuteAttackDestroy()
     {
         playerActions.Clear();
+
+        foreach (PieceBase piece in destroyObjects)
+        {
+            Debug.Log(piece.Player + "の" + piece.PieceType + " " + piece.PieceNum + "をDestroy");
+            DestroyPiece(piece);
+        }
+        destroyObjects.Clear();
         yield return null;
     }
-
-
 }

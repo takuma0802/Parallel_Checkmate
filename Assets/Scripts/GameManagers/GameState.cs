@@ -22,8 +22,7 @@ public class GameStateReactiveProperty : ReactiveProperty<GameState>
     public GameStateReactiveProperty(GameState initialValue)
         : base(initialValue)
     {
-        Sound.LoadBgm("3", "3_battle");
-        Sound.PlayBgm("3");
+        
     }
 }
 

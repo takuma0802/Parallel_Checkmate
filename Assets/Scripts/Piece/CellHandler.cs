@@ -15,7 +15,7 @@ public enum CellType
 public class CellHandler : MonoBehaviour
 {
     [SerializeField] private Button cellButton;
-    [SerializeField] private GameObject defaultCell, puttedCell, markerCell;
+    [SerializeField] private GameObject defaultCell, puttedCell, markerCell, attackCell;
 
     private int row;
     private int column;
@@ -83,12 +83,11 @@ public class CellHandler : MonoBehaviour
         puttedCell.SetActive(false);
     }
 
-    // private void ChangeDefault(GameObject cell)
-    // {
-    //     cell.GetComponent<RectTransform>().localPosition = new Vector3(0, 0, 0);
-    //     cell.GetComponent<RectTransform>().localScale = new Vector3(1f, 1f, 1f);
-    //     cell.GetComponentInChildren<Image>().DOFade(1f, 0.01f);
-    // }
+    public void AttackAnimation()
+    {
+        // ぼーん
+        attackCell.SetActive(true);
+    }
 
     public void SetKing()
     {

@@ -137,8 +137,7 @@ public class BoardManager : MonoBehaviour
         var isInside = 0 <= row && row < rowSize && 0 <= column && column < columnSize;
         if (!isInside) return false;
 
-        var canAttack = cells[column, row].CellType == CellType.Putted;
-        return canAttack;
+        return true;
     }
 
     private void SearchMovePointOfHolding(PlayerType player)
@@ -248,5 +247,10 @@ public class BoardManager : MonoBehaviour
             if(cell.CellType == CellType.Putted) puttedCellList.Add(cell);
         }
         return puttedCellList;
+    }
+
+    public void AttackAnimation(int column,int row)
+    {
+        cells[column,row].AttackAnimation();
     }
 }
