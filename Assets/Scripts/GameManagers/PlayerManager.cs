@@ -696,11 +696,13 @@ public class PlayerManager : MonoBehaviour
 
         if (player == PlayerType.Player1)
         {
-            var pieces = Pieces2.Where(i => i.IsPutted && !i.IsDestroyed).Select(i => i.Row * 8 + i.Column).ToArray();
-            foreach (var pieceNum in pieces)
+            var pieces = Pieces2.Where(i => i.IsPutted && !i.IsDestroyed).ToArray();
+            foreach (var piece in pieces)
             {
-                Debug.Log("pieceNum"+pieceNum);
-                if (pieceNum == cellNum) destroyObjects.Add(Pieces2[pieceNum]);
+                Debug.Log(piece.Player + piece.PieceType.ToString());
+                Debug.Log("piece column row"+piece.Column + piece.Row);
+                var pieceNum = piece.Row * 8 + piece.Column;
+                if (pieceNum == cellNum) destroyObjects.Add(piece);
             }
             if (cellNum == 15)
             {
@@ -709,11 +711,13 @@ public class PlayerManager : MonoBehaviour
         }
         else if (player == PlayerType.Player2)
         {
-            var pieces = Pieces1.Where(i => i.IsPutted && !i.IsDestroyed).Select(i => i.Row * 8 + i.Column).ToArray();
-            foreach (var pieceNum in pieces)
+            var pieces = Pieces1.Where(i => i.IsPutted && !i.IsDestroyed).ToArray();
+            foreach (var piece in pieces)
             {
-                Debug.Log("pieceNum"+pieceNum);
-                if (pieceNum == cellNum) destroyObjects.Add(Pieces1[pieceNum]);
+                Debug.Log(piece.Player + piece.PieceType.ToString());
+                Debug.Log("piece column row"+piece.Column + piece.Row);
+                var pieceNum = piece.Row * 8 + piece.Column;
+                if (pieceNum == cellNum) destroyObjects.Add(piece);
             }
             if (cellNum == 8)
             {
