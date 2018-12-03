@@ -9,6 +9,7 @@ public enum PieceType
     Piece3,
     Piece4,
     Piece5,
+    King
 }
 
 public enum PieceAction

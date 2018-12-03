@@ -30,6 +30,11 @@ public class GameManager : MonoBehaviour
                 //state.Red();
                 OnStateChanged(state);
             });
+        stateUI.NextStateButton.OnClickAsObservable().Subscribe(_ => 
+        {
+            // ボタン押した音
+
+        });
     }
 
     void OnStateChanged(GameState nextState)
@@ -66,8 +71,9 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator InitializeCoroutine()
     {
-        yield return playerManager.InitializePlayer(boardManager);
+        Debug.Log(CurrentState.Value);
         yield return boardManager.CreateBoard();
+        yield return playerManager.InitializePlayer(boardManager);
 
         // 画面がタップされるまで待つ
         yield return stateUI.NextStateButton.OnClickAsObservable().First().ToYieldInstruction();
@@ -79,6 +85,7 @@ public class GameManager : MonoBehaviour
     // Player確認UI表示
     private IEnumerator ReadyCoroutine()
     {
+        Debug.Log(CurrentState.Value);
         yield return new WaitForSeconds(1.0f);
         // 画面がタップされるまで待つ
         yield return stateUI.NextStateButton.OnClickAsObservable().First().ToYieldInstruction();
@@ -96,6 +103,7 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator StrategyTimeCoroutine()
     {
+        Debug.Log(CurrentState.Value);
         yield return new WaitForSeconds(1.0f);
         stateUI.DeactivateStateUI();
         
@@ -116,23 +124,27 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator Battle()
     {
+        Debug.Log(CurrentState.Value);
         yield return new WaitForSeconds(2.0f);
         stateUI.DeactivateStateUI();
         // 移動を行う
-        //yield return PlayerManager.
+        yield return playerManager.StartMove();
+
+        // 移動が重なることで破壊されるPieceを確認
+        yield return playerManager.ExcecuteMoveDestroy();
 
         // 攻撃を行う
+        yield return playerManager.StartBattle();
 
         // 破壊を行う
-
-        // 全て終わるまで待機
-        yield return new WaitForSeconds(3.0f);
+        yield return playerManager.ExcecuteAttackDestroy();
 
         CurrentState.Value = GameState.Result;
     }
 
     private IEnumerator Result()
     {
+        Debug.Log(CurrentState.Value);
         yield return new WaitForSeconds(2.0f);
         stateUI.DeactivateStateUI();
         // 王様が生きているかチェック
@@ -147,6 +159,7 @@ public class GameManager : MonoBehaviour
 
     private void Finished()
     {
+        Debug.Log(CurrentState.Value);
         // Resultシーンへ遷移
     }
 }

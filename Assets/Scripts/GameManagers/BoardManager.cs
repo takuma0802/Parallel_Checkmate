@@ -14,14 +14,7 @@ public class BoardManager : MonoBehaviour
 
     [SerializeField] private GameObject cellPrefab;
     [SerializeField] private GameObject backGround;
-
-    // Size周り
-    // private Dictionary<int, float> cellSizeRateDict = new Dictionary<int, float>(){
-    // 		// key: column count, value: cell size Rate
-    //         {3, 1f}, {4, 0.79f}, {5, 0.68f}, {6, 0.61f}, {8, 0.8f}};
-    private float cellSize = 100f;
-    // private float cellSizeWidth;
-    // private float cellSizeHeight;
+    public float cellSize = 100f;
 
     // Cell周り
     // column * row
@@ -30,21 +23,7 @@ public class BoardManager : MonoBehaviour
     private List<CellHandler> observedCells = new List<CellHandler>();
 
     private PlayerAction playerAction;
-
-    // public float CellSizeRate
-    // {
-    //     get { return cellSizeRateDict[columnSize]; }
-    // }
-
-    public int CoulumnSize
-    {
-        get { return columnSize; }
-    }
-
-    public List<CellHandler> PreviousCells
-    {
-        get { return previousCells; }
-    }
+    private List<CellHandler> puttedCellList = new List<CellHandler>();
 
     public IEnumerator CreateBoard()
     {
@@ -60,10 +39,9 @@ public class BoardManager : MonoBehaviour
         {
             for (int column = 0; column < columnSize; column++)
             {
-                StartCoroutine(CreateCell(CellType.Default, row, column));
+                StartCoroutine(CreateCell(column, row));
             }
         }
-        PutKing();
         yield return null;
     }
 
@@ -76,18 +54,19 @@ public class BoardManager : MonoBehaviour
         ObjectCreator.DestroyAllChild(this.gameObject);
     }
 
-    private IEnumerator CreateCell(CellType cellType, int row, int column)
+    private IEnumerator CreateCell(int column, int row)
     {
         CellHandler cell = ObjectCreator.CreateInObject(this.gameObject, cellPrefab).GetComponent<CellHandler>();
-        yield return cell.SetCell(row, column, cellType, columnSize);
+        yield return cell.SetCell(column, row, CellType.Default);
         cells[column, row] = cell;
 
         yield return null;
     }
 
-    private void PutKing()
+    public void PutKings()
     {
-        // King置け
+        cells[0,1].SetKing();
+        cells[7,1].SetKing();
     }
 
 
@@ -108,13 +87,15 @@ public class BoardManager : MonoBehaviour
 
     public void SearchMovePoint(PlayerAction playerAction, bool onBoard)
     {
+        //if (this.playerAction.Piece == playerAction.Piece) 
+        RemoveAllBtnAction();
         this.playerAction = playerAction;
 
-        if (!onBoard)
+        if (!onBoard) //手札
         {
             SearchMovePointOfHolding(playerAction.Piece.Player);
         }
-        else
+        else //Board上
         {
             var type = playerAction.Piece.PieceType;
             var column = playerAction.CurrentColumn;
@@ -123,7 +104,7 @@ public class BoardManager : MonoBehaviour
             switch (type)
             {
                 case PieceType.Piece1:
-                    SearchMovePointOfPiece1(column, row);
+                    SearchMovePointOfPiece1(column, row, playerAction.Piece.Player);
                     break;
                 case PieceType.Piece2:
                     SearchMovePointOfPiece2(column, row);
@@ -142,13 +123,22 @@ public class BoardManager : MonoBehaviour
     }
 
     // 指定したCellに駒を置ける状況かどうかを判定する
-    public bool CanPut(int row, int column)
+    public bool CanPut(int column, int row)
     {
-        var isInside = 0 <= row && row < columnSize && 0 <= column && column < columnSize;
+        var isInside = 0 <= row && row < rowSize && 0 <= column && column < columnSize;
         if (!isInside) return false;
 
         var canPut = cells[column, row].CellType == CellType.Default;
         return canPut;
+    }
+
+    public bool CanAttack(int column,int row)
+    {
+        var isInside = 0 <= row && row < rowSize && 0 <= column && column < columnSize;
+        if (!isInside) return false;
+
+        var canAttack = cells[column, row].CellType == CellType.Putted;
+        return canAttack;
     }
 
     private void SearchMovePointOfHolding(PlayerType player)
@@ -156,7 +146,6 @@ public class BoardManager : MonoBehaviour
         if (player == PlayerType.Player1)
         {
             ObserveCells(cells[0, 0]);
-            ObserveCells(cells[0, 1]);
             ObserveCells(cells[0, 2]);
             ObserveCells(cells[1, 0]);
             ObserveCells(cells[1, 1]);
@@ -168,18 +157,29 @@ public class BoardManager : MonoBehaviour
             ObserveCells(cells[6, 1]);
             ObserveCells(cells[6, 2]);
             ObserveCells(cells[7, 0]);
-            ObserveCells(cells[7, 1]);
             ObserveCells(cells[7, 2]);
         }
     }
 
-    private void SearchMovePointOfPiece1(int row, int column)
+    private void SearchMovePointOfPiece1(int column, int row, PlayerType player)
     {
+        if (player == PlayerType.Player1)
+        {
+            if (CanPut(column + 1, row)) ObserveCells(cells[column + 1, row]);
+        }
+        else if (player == PlayerType.Player2)
+        {
+            if (CanPut(column - 1, row)) ObserveCells(cells[column - 1, row]);
+        }
     }
-    private void SearchMovePointOfPiece2(int row, int column)
+    private void SearchMovePointOfPiece2(int column, int row)
     {
+        if (CanPut(column + 1, row)) ObserveCells(cells[column + 1, row]);
+        if (CanPut(column - 1, row)) ObserveCells(cells[column - 1, row]);
+        if (CanPut(column, row + 1)) ObserveCells(cells[column, row + 1]);
+        if (CanPut(column, row - 1)) ObserveCells(cells[column, row - 1]);
     }
-    private void SearchMovePointOfPiece3(int row, int column)
+    private void SearchMovePointOfPiece3(int column, int row)
     {
         if (CanPut(column + 2, row - 1)) ObserveCells(cells[column + 2, row - 1]);
         if (CanPut(column + 2, row + 1)) ObserveCells(cells[column + 2, row + 1]);
@@ -190,13 +190,23 @@ public class BoardManager : MonoBehaviour
         if (CanPut(column + 1, row - 2)) ObserveCells(cells[column + 1, row - 2]);
         if (CanPut(column - 1, row - 2)) ObserveCells(cells[column - 1, row - 2]);
     }
-    private void SearchMovePointOfPiece4(int row, int column)
+    private void SearchMovePointOfPiece4(int column, int row)
     {
-
+        if (CanPut(column + 1, row + 1)) ObserveCells(cells[column + 1, row + 1]);
+        if (CanPut(column + 1, row - 1)) ObserveCells(cells[column + 1, row - 1]);
+        if (CanPut(column - 1, row + 1)) ObserveCells(cells[column - 1, row + 1]);
+        if (CanPut(column - 1, row - 1)) ObserveCells(cells[column - 1, row - 1]);
     }
-    private void SearchMovePointOfPiece5(int row, int column)
+    private void SearchMovePointOfPiece5(int column, int row)
     {
-
+        if (CanPut(column + 1, row + 1)) ObserveCells(cells[column + 1, row + 1]);
+        if (CanPut(column + 1, row - 1)) ObserveCells(cells[column + 1, row - 1]);
+        if (CanPut(column + 1, row)) ObserveCells(cells[column + 1, row]);
+        if (CanPut(column - 1, row + 1)) ObserveCells(cells[column - 1, row + 1]);
+        if (CanPut(column - 1, row - 1)) ObserveCells(cells[column - 1, row - 1]);
+        if (CanPut(column - 1, row)) ObserveCells(cells[column - 1, row]);
+        if (CanPut(column, row + 1)) ObserveCells(cells[column, row + 1]);
+        if (CanPut(column, row - 1)) ObserveCells(cells[column, row - 1]);
     }
 
     private void ObserveCells(CellHandler cell)
@@ -210,14 +220,13 @@ public class BoardManager : MonoBehaviour
     private void OnClickedCellButton(CellHandler cell)
     {
         RemoveAllBtnAction();
+        //cell.ChangeToPutted();
+
         playerAction.NextColumn = cell.Column;
         playerAction.NextRow = cell.Row;
         playerAction.Action = PieceAction.Move;
 
         MessageBroker.Default.Publish(playerAction);
-
-        // previousCells.Add(cell);
-
     }
 
     // 監視されているButtonの監視を解除する
@@ -229,5 +238,15 @@ public class BoardManager : MonoBehaviour
             cell.ChangeButtonInteractable(false);
             cell.CellButton.onClick.RemoveAllListeners();
         }
+    }
+
+    public List<CellHandler> ReturnPuttedCellList()
+    {
+        puttedCellList.Clear();
+        foreach(CellHandler cell in cells)
+        {
+            if(cell.CellType == CellType.Putted) puttedCellList.Add(cell);
+        }
+        return puttedCellList;
     }
 }

@@ -17,6 +17,7 @@ public class PlayerManager : MonoBehaviour
     // 0~4:Piece1/ 5~8:Piece2/ 9~11:Piece3...
     [HideInInspector] public PieceBase[] Pieces1;
     [HideInInspector] public PieceBase[] Pieces2;
+    [HideInInspector] public PieceProvider[] Kings;
 
     // 盤上に置くPieceのUIたち
     [HideInInspector] public PieceProvider[] PiecesObject1 = new PieceProvider[15];
@@ -40,6 +41,7 @@ public class PlayerManager : MonoBehaviour
     public Image costImage;
     public Sprite[] costNumber;
     public Button SubmitButton;
+    public Button UndoButton;
 
     private TimeManager timeManager;
     private BoardManager boardManager;
@@ -59,10 +61,16 @@ public class PlayerManager : MonoBehaviour
 
         yield return CreateHoldingPiece(PlayerType.Player1);
         yield return CreateHoldingPiece(PlayerType.Player2);
+        PutKings();
 
         foreach (PieceProvider piece in PiecesObject1) ChangeActiveUI(piece.gameObject, false);
         foreach (PieceProvider piece in PiecesObject2) ChangeActiveUI(piece.gameObject, false);
 
+        ObserveStreams();
+    }
+
+    private void ObserveStreams()
+    {
         // 監視
         MessageBroker.Default.Receive<PlayerAction>().Subscribe(x =>
         {
@@ -75,12 +83,12 @@ public class PlayerManager : MonoBehaviour
                 if (x.Player == PlayerType.Player1)
                 {
                     PutPieceUI(PiecesObject1[x.Piece.PieceNum].gameObject, x.NextColumn, x.NextRow);
-                    x.Piece.IsPutted = true;
+                    PutPieceInfo(x.Piece, x.NextColumn, x.NextRow);
                 }
                 else if (x.Player == PlayerType.Player2)
                 {
                     PutPieceUI(PiecesObject2[x.Piece.PieceNum].gameObject, x.NextColumn, x.NextRow);
-                    x.Piece.IsPutted = true;
+                    PutPieceInfo(x.Piece, x.NextColumn, x.NextRow);
                 }
             }
             else if (x.Action == PieceAction.Attack)
@@ -98,6 +106,12 @@ public class PlayerManager : MonoBehaviour
             }
 
             playerActions.Add(x);
+            StartObserve();
+        });
+
+        UndoButton.OnClickAsObservable().Subscribe(_ =>
+        {
+            OnClickUndoButton();
             StartObserve();
         });
     }
@@ -169,6 +183,20 @@ public class PlayerManager : MonoBehaviour
         yield return null;
     }
 
+    private void PutKings()
+    {
+        Kings = new PieceProvider[2];
+        Kings[0] = ObjectCreator.CreateInObject(PlayerGameObject[0], piecePrefabs[10]).GetComponent<PieceProvider>();
+        Kings[1] = ObjectCreator.CreateInObject(PlayerGameObject[1], piecePrefabs[11]).GetComponent<PieceProvider>();
+
+        PutPieceUI(Kings[0].gameObject, 0, 1);
+        Kings[0].SetPieceUIInfo(PlayerType.Player1, -1, PieceType.King);
+
+        PutPieceUI(Kings[1].gameObject, 7, 1);
+        Kings[1].SetPieceUIInfo(PlayerType.Player2, -1, PieceType.King);
+        boardManager.PutKings();
+    }
+
     private void ChangeActiveUI(GameObject obj, bool enabled)
     {
         obj.SetActive(enabled);
@@ -190,6 +218,7 @@ public class PlayerManager : MonoBehaviour
         // 決定ボタンが押される
         yield return SubmitButton.OnClickAsObservable().First().ToYieldInstruction();
 
+        DisposeAllStream();
         ChangeActiveUI(StrategyUI, false);
         yield return UndoActions();
     }
@@ -219,7 +248,6 @@ public class PlayerManager : MonoBehaviour
         yield return null;
         SetPuttedPieces();
         ResetCost();
-        if (player == PlayerType.Player1) playerActions.Clear();
     }
 
     private void ResetCost()
@@ -231,7 +259,6 @@ public class PlayerManager : MonoBehaviour
     private void ChangeCost(int cost)
     {
         currentCost -= cost;
-        Debug.Log(currentCost);
         costImage.sprite = costNumber[currentCost];
     }
 
@@ -242,7 +269,7 @@ public class PlayerManager : MonoBehaviour
         foreach (PieceBase piece in pieces)
         {
             if (!piece.IsPutted) return;
-            if (!piece.IsDestroyed) return;
+            if (piece.IsDestroyed) return;
             if (puttedPieces.Contains(piece)) return;
             puttedPieces.Add(piece);
         }
@@ -267,6 +294,14 @@ public class PlayerManager : MonoBehaviour
     {
         target.transform.localPosition = boardManager.ReturnCellLocalPosition(column, row);
         ChangeActiveUI(target, true);
+        // 音
+    }
+
+    private void PutPieceInfo(PieceBase target, int column, int row)
+    {
+        target.Column = column;
+        target.Row = row;
+        target.IsPutted = true;
     }
 
 
@@ -285,43 +320,37 @@ public class PlayerManager : MonoBehaviour
         holdingPieceImage[3].sprite = pieceNumberImage[piece4num];
         holdingPieceImage[4].sprite = pieceNumberImage[piece5num];
 
-        if (piece1num >= 1)
-            ActivateHoldingPiece(holdingPieceButtons[0], PieceType.Piece1, 1);
+        if (piece1num >= 1 && currentCost >= 1)
+            ActivateHoldingPiece(holdingPieceButtons[0], PieceType.Piece1);
         else
             DisableHoldingPiece(holdingPieceButtons[0]);
 
-        if (piece2num >= 1)
-            ActivateHoldingPiece(holdingPieceButtons[1], PieceType.Piece2, 2);
+        if (piece2num >= 1 && currentCost >= 2)
+            ActivateHoldingPiece(holdingPieceButtons[1], PieceType.Piece2);
         else
             DisableHoldingPiece(holdingPieceButtons[1]);
 
-        if (piece3num >= 1)
-            ActivateHoldingPiece(holdingPieceButtons[2], PieceType.Piece3, 3);
+        if (piece3num >= 1 && currentCost >= 3)
+            ActivateHoldingPiece(holdingPieceButtons[2], PieceType.Piece3);
         else
             DisableHoldingPiece(holdingPieceButtons[2]);
 
-        if (piece4num >= 1)
-            ActivateHoldingPiece(holdingPieceButtons[3], PieceType.Piece4, 4);
+        if (piece4num >= 1 && currentCost >= 4)
+            ActivateHoldingPiece(holdingPieceButtons[3], PieceType.Piece4);
         else
             DisableHoldingPiece(holdingPieceButtons[3]);
 
-        if (piece5num >= 1)
-            ActivateHoldingPiece(holdingPieceButtons[4], PieceType.Piece5, 5);
+        if (piece5num >= 1 && currentCost >= 5)
+            ActivateHoldingPiece(holdingPieceButtons[4], PieceType.Piece5);
         else
             DisableHoldingPiece(holdingPieceButtons[4]);
-
-        // アニメーションいれたいなぁ
-
     }
 
-    private void ActivateHoldingPiece(Button button, PieceType pieceType, int cost)
+    private void ActivateHoldingPiece(Button button, PieceType pieceType)
     {
         button.interactable = true;
-        // アルファ回復
-        if (cost > currentCost) return;
         var stream = button.OnClickAsObservable().Subscribe(_ =>
                 {
-                    print(button.name + "が押されたお！");
                     OnClickAnyPieces(this.player, -1, pieceType);
                 });
         _compositeDisposable.Add(stream);
@@ -330,21 +359,22 @@ public class PlayerManager : MonoBehaviour
     private void DisableHoldingPiece(Button button)
     {
         button.interactable = false;
-        // アルファ減らす
     }
+
+
 
     // Board上にあるPieceの中で、置けるPieceを監視
     private void ObserveAvailablePieces(PieceBase[] pieces, PieceProvider[] piecesObj)
     {
         foreach (var piece in pieces)
         {
-            if (piece.IsDestroyed) return;
-            if (!piece.IsPutted) return;
-            if (piece.PieceCost > currentCost) return;
+            if (piece.IsDestroyed) continue;
+            if (!piece.IsPutted) continue;
+            if (piece.PieceCost > currentCost) continue;
+
             var stream = piecesObj[piece.PieceNum].pieceButton
                 .OnClickAsObservable().Subscribe(_ =>
                 {
-                    print(piece.name + "が押されたお！");
                     OnClickAnyPieces(piece.Player, piece.PieceNum, piece.PieceType);
                 });
             _compositeDisposable.Add(stream);
@@ -356,50 +386,67 @@ public class PlayerManager : MonoBehaviour
         playerAction = new PlayerAction();
         if (player == PlayerType.Player1)
         {
-            if (pieceNum >= 0) // Board上のPiece選択
-            {
-                playerAction.Piece = Pieces1[pieceNum];
-                playerAction.CurrentRow = Pieces1[pieceNum].Row;
-                playerAction.CurrentColumn = Pieces1[pieceNum].Column;
-                playerAction.OnBoard = true;
-                boardManager.SearchMovePoint(playerAction, true);
-            }
-            else
+            if (pieceNum < 0) // 手札から選択
             {
                 var num = PiecesObject1.Where(x => x.PieceType == pieceType && !Pieces1[x.PieceNum].IsPutted).FirstOrDefault().PieceNum;
                 playerAction.Piece = Pieces1[num];
                 playerAction.OnBoard = false;
                 boardManager.SearchMovePoint(playerAction, false);
+                return;
             }
+
+            playerAction.Piece = Pieces1[pieceNum];
+            playerAction.CurrentRow = Pieces1[pieceNum].Row;
+            playerAction.CurrentColumn = Pieces1[pieceNum].Column;
+            playerAction.OnBoard = true;
+
+            ObserveOneself(playerAction, PiecesObject1[pieceNum]);
+            boardManager.SearchMovePoint(playerAction, true);
         }
         else if (player == PlayerType.Player2)
         {
-            if (pieceNum >= 0) // Board上のPiece選択
-            {
-                playerAction.Piece = Pieces2[pieceNum];
-                playerAction.CurrentRow = Pieces2[pieceNum].Row;
-                playerAction.CurrentColumn = Pieces2[pieceNum].Column;
-                playerAction.OnBoard = true;
-                boardManager.SearchMovePoint(playerAction, true);
-            }
-            else
+            if (pieceNum < 0) // 手札から選択
             {
                 var num = PiecesObject2.Where(x => x.PieceType == pieceType && !Pieces2[x.PieceNum].IsPutted).FirstOrDefault().PieceNum;
                 playerAction.Piece = Pieces2[num];
                 playerAction.OnBoard = false;
                 boardManager.SearchMovePoint(playerAction, false);
+                return;
             }
+
+            playerAction.Piece = Pieces2[pieceNum];
+            playerAction.CurrentRow = Pieces2[pieceNum].Row;
+            playerAction.CurrentColumn = Pieces2[pieceNum].Column;
+            playerAction.OnBoard = true;
+
+            ObserveOneself(playerAction, PiecesObject2[pieceNum]);
+            boardManager.SearchMovePoint(playerAction, true);
         }
     }
+
+    private void ObserveOneself(PlayerAction action, PieceProvider pieceObj)
+    {
+        pieceObj.ChangeAttackIcon(true);
+        var stream = pieceObj.pieceButton
+                .OnClickAsObservable().Subscribe(_ =>
+                {
+                    action.Action = PieceAction.Attack;
+                    MessageBroker.Default.Publish(action);
+                });
+        _compositeDisposable.Add(stream);
+    }
+
     private void DisposeAllStream()
     {
         _compositeDisposable.Clear();
+        boardManager.RemoveAllBtnAction();
     }
 
     private IEnumerator UndoActions()
     {
         if (playerActions.Count == 0) yield break;
-        foreach (PlayerAction x in playerActions)
+        var reverseAction = playerActions.AsEnumerable().Reverse();
+        foreach (PlayerAction x in reverseAction)
         {
             if (x.Action == PieceAction.Attack) continue;
 
@@ -412,6 +459,7 @@ public class PlayerManager : MonoBehaviour
                 else
                 {
                     PutPieceUI(PiecesObject1[x.Piece.PieceNum].gameObject, x.CurrentColumn, x.CurrentRow);
+                    PutPieceInfo(x.Piece, x.CurrentColumn, x.CurrentRow);
                 }
             }
             else if (x.Player == PlayerType.Player2)
@@ -423,9 +471,157 @@ public class PlayerManager : MonoBehaviour
                 else
                 {
                     PutPieceUI(PiecesObject2[x.Piece.PieceNum].gameObject, x.CurrentColumn, x.CurrentRow);
+                    PutPieceInfo(x.Piece, x.CurrentColumn, x.CurrentRow);
                 }
             }
         }
         yield return new WaitForSeconds(2.0f);
     }
+
+    private void OnClickUndoButton()
+    {
+        DisposeAllStream();
+        if (playerActions.Count == 0) return;
+        var x = playerActions.Last();
+
+        if (x.Action == PieceAction.Move)
+        {
+            if (x.Player == PlayerType.Player1)
+            {
+                if (!x.OnBoard)
+                {
+                    ChangeActiveUI(PiecesObject1[x.Piece.PieceNum].gameObject, false);
+                    x.Piece.IsPutted = false;
+                }
+                else
+                {
+                    PutPieceUI(PiecesObject1[x.Piece.PieceNum].gameObject, x.CurrentColumn, x.CurrentRow);
+                    PutPieceInfo(x.Piece, x.CurrentColumn, x.CurrentRow);
+                }
+            }
+            else if (x.Player == PlayerType.Player2)
+            {
+                if (!x.OnBoard)
+                {
+                    ChangeActiveUI(PiecesObject2[x.Piece.PieceNum].gameObject, false);
+                    x.Piece.IsPutted = false;
+                }
+                else
+                {
+                    PutPieceUI(PiecesObject2[x.Piece.PieceNum].gameObject, x.CurrentColumn, x.CurrentRow);
+                    PutPieceInfo(x.Piece, x.CurrentColumn, x.CurrentRow);
+                }
+            }
+        }
+        ChangeCost(-x.Piece.PieceCost);
+        playerActions.RemoveAt(playerActions.Count - 1);
+    }
+
+
+
+
+
+    ///// Battle周り
+    public IEnumerator StartMove()
+    {
+        if (playerActions.Count == 0) yield break;
+
+        foreach (PlayerAction x in playerActions)
+        {
+            if (x.Action == PieceAction.Attack) continue;
+
+            if (x.Player == PlayerType.Player1)
+            {
+                if (!x.OnBoard)
+                {
+                    ChangeActiveUI(PiecesObject1[x.Piece.PieceNum].gameObject, true);
+                }
+                else
+                {
+                    PutPieceUI(PiecesObject1[x.Piece.PieceNum].gameObject, x.NextColumn, x.NextRow);
+                    PutPieceInfo(x.Piece, x.NextColumn, x.NextRow);
+                }
+            }
+            else if (x.Player == PlayerType.Player2)
+            {
+                if (!x.OnBoard)
+                {
+                    ChangeActiveUI(PiecesObject2[x.Piece.PieceNum].gameObject, true);
+                }
+                else
+                {
+                    PutPieceUI(PiecesObject2[x.Piece.PieceNum].gameObject, x.NextColumn, x.NextRow);
+                    PutPieceInfo(x.Piece, x.NextColumn, x.NextRow);
+                }
+            }
+            yield return new WaitForSeconds(0.5f);
+        }
+    }
+
+    public IEnumerator ExcecuteMoveDestroy()
+    {
+        if (playerActions.Count == 0) yield return null;
+
+        var puttedPieces1 = Pieces1.Where(i => i.IsPutted && !i.IsDestroyed).ToArray();
+        Debug.Log(puttedPieces1.Length);
+
+        // for (int i = 0; i < 8; i++)
+        // {
+        //     Debug.Log(playerActions.Where(x => x.NextColumn == i).Count());
+        //     if(playerActions.Where(x => x.NextColumn == i).Count() > 1)
+        //     {
+
+        //     }
+        // }
+
+
+        // List<CellHandler> puttedCells = boardManager.ReturnPuttedCellList();
+        // Debug.Log("puttedCell"+puttedCells.Count);
+        // // 現在の置かれているPieceを更新
+        // SearchPuttedPieces(Pieces1);
+        // SearchPuttedPieces(Pieces2);
+
+        // Debug.Log("puttedPiece"+puttedPieces.Count);
+        // foreach(CellHandler cell in puttedCells)
+        // {
+        //     var count = puttedPieces.Where(x => x.Row == cell.Row && x.Column == cell.Column).Count();
+        //     Debug.Log("count:"+count);
+        //     if(count > 1)
+        //     {
+
+        //     };
+        // }
+
+
+
+        yield return new WaitForSeconds(1.0f);
+    }
+
+    public IEnumerator StartBattle()
+    {
+        if (playerActions.Count == 0) yield break;
+
+        foreach (PlayerAction x in playerActions)
+        {
+            if (x.Action == PieceAction.Move) continue;
+
+            if (x.Player == PlayerType.Player1)
+            {
+                // 
+            }
+            else if (x.Player == PlayerType.Player2)
+            {
+                //   
+            }
+            yield return new WaitForSeconds(0.5f);
+        }
+    }
+
+    public IEnumerator ExcecuteAttackDestroy()
+    {
+        playerActions.Clear();
+        yield return null;
+    }
+
+
 }

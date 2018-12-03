@@ -7,11 +7,11 @@ public class PieceProvider : MonoBehaviour
 {
 
     public Button pieceButton;
+    public GameObject AttackIcon;
 
     private PlayerType player;
     private int pieceNum;
     public PieceType PieceType;
-
 
     public PlayerType Player { get { return player; } }
     public int PieceNum { get { return pieceNum; } }
@@ -28,4 +28,9 @@ public class PieceProvider : MonoBehaviour
 		pieceButton.interactable = enable;
 		// ButtonのImage変更??
 	}
+
+    public void ChangeAttackIcon(bool enable)
+    {
+        AttackIcon.SetActive(enable);
+    }
 }

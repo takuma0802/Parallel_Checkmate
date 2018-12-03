@@ -8,18 +8,17 @@ public enum CellType
 {
     Default,
     Putted,
-    Maker
+    Maker,
+    King
 }
 
 public class CellHandler : MonoBehaviour
 {
     [SerializeField] private Button cellButton;
-    [SerializeField] private GameObject defaultCell, selectedCell, markerCell;
+    [SerializeField] private GameObject defaultCell, puttedCell, markerCell;
 
     private int row;
     private int column;
-    private float cellSizeRate;
-    private int columnSize;
     private CellType cellType;
     private Sequence sequence;
 
@@ -43,44 +42,15 @@ public class CellHandler : MonoBehaviour
         get { return column; }
     }
 
-    public IEnumerator SetCell(int row, int column, CellType cellType, int columnSize)
+    public IEnumerator SetCell(int column, int row, CellType cellType)
     {
-        this.row = row;
         this.column = column;
-        //this.cellSizeRate = cellSizeRate;
-        this.columnSize = columnSize;
+        this.row = row;
         this.gameObject.name = row.ToString() + "-" + column.ToString();
         this.cellType = cellType;
-        SetType(cellType);
+        ChangeButtonInteractable(false);
         yield return null;
     }
-
-    private void SetType(CellType type)
-    {
-        switch (type)
-        {
-            case CellType.Default: // Default
-                break;
-            case CellType.Putted: // Putted
-                break;
-            case CellType.Maker: // Marker
-                break;
-        }
-
-        ChangeButtonInteractable(false);
-        //SetCellImageSize(markerCell);
-    }
-
-    // private void SetCellImageSize(GameObject cell)
-    // {
-    //     float newSize = 252 * cellSizeRate;
-    //     int buffer = 40 - (5 * (columnSize - 3));
-    //     cell.GetComponent<RectTransform>().sizeDelta = new Vector3(newSize, newSize);
-    //     cell.GetComponent<RectTransform>().localPosition = new Vector3(0, buffer);
-
-    //     var image = cell.GetComponentInChildren<Image>(true).gameObject;
-    //     image.GetComponent<RectTransform>().sizeDelta = new Vector2(newSize, newSize);
-    // }
 
     public void ChangeButtonInteractable(bool enable)
     {
@@ -92,31 +62,36 @@ public class CellHandler : MonoBehaviour
         markerCell.SetActive(enable);
     }
 
-    public void OnClickedCell()
+    public void ChangeToPutted()
     {
         if (cellType == CellType.Maker) return;
         if (sequence != null) sequence.Kill();
-        ChangeDefault(selectedCell);
+        //ChangeDefault(puttedCell);
 
         cellType = CellType.Putted;
         defaultCell.SetActive(false);
-        selectedCell.SetActive(true);
+        puttedCell.SetActive(true);
     }
 
     public void ChangeToDefault()
     {
         if (sequence != null) sequence.Kill();
-        ChangeDefault(selectedCell);
+        //ChangeDefault(puttedCell);
 
         cellType = CellType.Default;
         defaultCell.SetActive(true);
-        selectedCell.SetActive(false);
+        puttedCell.SetActive(false);
     }
 
-    private void ChangeDefault(GameObject cell)
+    // private void ChangeDefault(GameObject cell)
+    // {
+    //     cell.GetComponent<RectTransform>().localPosition = new Vector3(0, 0, 0);
+    //     cell.GetComponent<RectTransform>().localScale = new Vector3(1f, 1f, 1f);
+    //     cell.GetComponentInChildren<Image>().DOFade(1f, 0.01f);
+    // }
+
+    public void SetKing()
     {
-        cell.GetComponent<RectTransform>().localPosition = new Vector3(0, 0, 0);
-        cell.GetComponent<RectTransform>().localScale = new Vector3(1f, 1f, 1f);
-        cell.GetComponentInChildren<Image>().DOFade(1f, 0.01f);
+        cellType = CellType.King;
     }
 }

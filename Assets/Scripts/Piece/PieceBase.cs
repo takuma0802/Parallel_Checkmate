@@ -10,7 +10,6 @@ public abstract class PieceBase : MonoBehaviour, IPieceAction
     // Pieceの固有番号（0~14）
     protected int pieceNum;
     protected int pieceCost;
-    
 
     private int row;
     private int column;
@@ -53,11 +52,4 @@ public abstract class PieceBase : MonoBehaviour, IPieceAction
 
     public virtual void Move() { }
     public virtual void Attack() { }
-
-    public virtual void Start()
-    {
-
-    }
-
-
 }
