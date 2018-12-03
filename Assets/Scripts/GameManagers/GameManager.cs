@@ -109,6 +109,8 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log(CurrentState.Value);
         yield return stateUI.NextStateButton.OnClickAsObservable().First().ToYieldInstruction();
+        Sound.LoadSe("13","13_junbi");
+        Sound.PlaySe("13");
         stateUI.DeactivateStateUI();
 
         // 戦略タイム
@@ -130,6 +132,8 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log(CurrentState.Value);
         yield return stateUI.NextStateButton.OnClickAsObservable().First().ToYieldInstruction();
+        Sound.LoadSe("7","7_koutai");
+        Sound.PlaySe("7");
         stateUI.DeactivateStateUI();
         // 移動を行う
         yield return playerManager.StartMove();
@@ -170,18 +174,27 @@ public class GameManager : MonoBehaviour
             drow.SetActive(true);
             p1.SetActive(false);
             p2.SetActive(false);
+            Sound.StopBgm();
+            Sound.LoadBgm("19","19_draw");
+            Sound.PlayBgm("19");
         }
         else if (playerManager.player1win)
         {
             drow.SetActive(false);
             p1.SetActive(true);
             p2.SetActive(false);
+            Sound.StopBgm();
+            Sound.LoadBgm("4","4_result_?");
+            Sound.PlayBgm("4");
         }
         else if (playerManager.player2win)
         {
             drow.SetActive(false);
             p1.SetActive(false);
             p2.SetActive(true);
+            Sound.StopBgm();
+            Sound.LoadBgm("4","4_result_?");
+            Sound.PlayBgm("4");
         }
         resultUI.SetActive(true);
     }

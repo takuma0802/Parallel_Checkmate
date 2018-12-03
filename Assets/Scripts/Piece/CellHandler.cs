@@ -86,7 +86,7 @@ public class CellHandler : MonoBehaviour
     public void AttackAnimation()
     {
         // ぼーん
-        attackCell.SetActive(true);
+        //attackCell.SetActive(true);
         Sound.LoadSe("10","10_komakougeki");
         Sound.PlaySe("10");
     }

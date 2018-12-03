@@ -33,6 +33,8 @@ public class PlayerManager : MonoBehaviour
     private PlayerAction playerAction;
     private List<PieceBase> destroyObjects = new List<PieceBase>();
 
+    public GameObject effect;
+
 
     // 0:Piece1/ 1:Piece2/ 2:Piece3...
     public GameObject[] piecePrefabs;
@@ -247,6 +249,14 @@ public class PlayerManager : MonoBehaviour
         // 現在の置かれているPieceを更新
         SearchPuttedPieces(Pieces1);
         SearchPuttedPieces(Pieces2);
+        foreach(var pieceObj in PiecesObject1)
+        {
+            pieceObj.ChangeAttackIcon(false);
+        }
+        foreach(var pieceObj in PiecesObject2)
+        {
+            pieceObj.ChangeAttackIcon(false);
+        }
 
         yield return null;
         SetPuttedPieces();
@@ -297,9 +307,6 @@ public class PlayerManager : MonoBehaviour
     {
         target.transform.localPosition = boardManager.ReturnCellLocalPosition(column, row);
         ChangeActiveUI(target, true);
-        // 音
-        Sound.LoadSe("9","9_komaidou");
-        Sound.PlaySe("9");
     }
 
     private void PutPieceInfo(PieceBase target, int column, int row, bool isPutted)
@@ -307,6 +314,9 @@ public class PlayerManager : MonoBehaviour
         target.Column = column;
         target.Row = row;
         target.IsPutted = isPutted;
+        // 音
+        Sound.LoadSe("9","9_komaidou");
+        Sound.PlaySe("9");
     }
 
 
@@ -547,6 +557,15 @@ public class PlayerManager : MonoBehaviour
     ///// Battle周り
     public IEnumerator StartMove()
     {
+        foreach(var pieceObj in PiecesObject1)
+        {
+            pieceObj.ChangeAttackIcon(false);
+        }
+        foreach(var pieceObj in PiecesObject2)
+        {
+            pieceObj.ChangeAttackIcon(false);
+        }
+
         if (playerActions.Count == 0) yield break;
 
         foreach (PlayerAction x in playerActions)
@@ -695,7 +714,8 @@ public class PlayerManager : MonoBehaviour
     private void PieceAttack(int column, int row, PlayerType player)
     {
         //UI表示
-        boardManager.AttackAnimation(column, row);
+        //boardManager.AttackAnimation(column, row);
+        PutPieceUI(effect,column,row);
 
         // このCellに敵がいるかチェックして追加
         var cellNum = row * 8 + column;
