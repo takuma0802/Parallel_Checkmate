@@ -83,12 +83,12 @@ public class PlayerManager : MonoBehaviour
                 if (x.Player == PlayerType.Player1)
                 {
                     PutPieceUI(PiecesObject1[x.Piece.PieceNum].gameObject, x.NextColumn, x.NextRow);
-                    PutPieceInfo(x.Piece, x.NextColumn, x.NextRow);
+                    PutPieceInfo(x.Piece, x.NextColumn, x.NextRow, true);
                 }
                 else if (x.Player == PlayerType.Player2)
                 {
                     PutPieceUI(PiecesObject2[x.Piece.PieceNum].gameObject, x.NextColumn, x.NextRow);
-                    PutPieceInfo(x.Piece, x.NextColumn, x.NextRow);
+                    PutPieceInfo(x.Piece, x.NextColumn, x.NextRow, true);
                 }
             }
             else if (x.Action == PieceAction.Attack)
@@ -297,11 +297,11 @@ public class PlayerManager : MonoBehaviour
         // 音
     }
 
-    private void PutPieceInfo(PieceBase target, int column, int row)
+    private void PutPieceInfo(PieceBase target, int column, int row, bool isPutted)
     {
         target.Column = column;
         target.Row = row;
-        target.IsPutted = true;
+        target.IsPutted = isPutted;
     }
 
 
@@ -455,11 +455,12 @@ public class PlayerManager : MonoBehaviour
                 if (!x.OnBoard)
                 {
                     ChangeActiveUI(PiecesObject1[x.Piece.PieceNum].gameObject, false);
+                    PutPieceInfo(x.Piece, 0, 0, false);
                 }
                 else
                 {
                     PutPieceUI(PiecesObject1[x.Piece.PieceNum].gameObject, x.CurrentColumn, x.CurrentRow);
-                    PutPieceInfo(x.Piece, x.CurrentColumn, x.CurrentRow);
+                    PutPieceInfo(x.Piece, x.CurrentColumn, x.CurrentRow, true);
                 }
             }
             else if (x.Player == PlayerType.Player2)
@@ -467,11 +468,12 @@ public class PlayerManager : MonoBehaviour
                 if (!x.OnBoard)
                 {
                     ChangeActiveUI(PiecesObject2[x.Piece.PieceNum].gameObject, false);
+                    PutPieceInfo(x.Piece, 0, 0, false);
                 }
                 else
                 {
                     PutPieceUI(PiecesObject2[x.Piece.PieceNum].gameObject, x.CurrentColumn, x.CurrentRow);
-                    PutPieceInfo(x.Piece, x.CurrentColumn, x.CurrentRow);
+                    PutPieceInfo(x.Piece, x.CurrentColumn, x.CurrentRow, true);
                 }
             }
         }
@@ -491,12 +493,12 @@ public class PlayerManager : MonoBehaviour
                 if (!x.OnBoard)
                 {
                     ChangeActiveUI(PiecesObject1[x.Piece.PieceNum].gameObject, false);
-                    x.Piece.IsPutted = false;
+                    PutPieceInfo(x.Piece, 0, 0, false);
                 }
                 else
                 {
                     PutPieceUI(PiecesObject1[x.Piece.PieceNum].gameObject, x.CurrentColumn, x.CurrentRow);
-                    PutPieceInfo(x.Piece, x.CurrentColumn, x.CurrentRow);
+                    PutPieceInfo(x.Piece, x.CurrentColumn, x.CurrentRow, true);
                 }
             }
             else if (x.Player == PlayerType.Player2)
@@ -504,17 +506,18 @@ public class PlayerManager : MonoBehaviour
                 if (!x.OnBoard)
                 {
                     ChangeActiveUI(PiecesObject2[x.Piece.PieceNum].gameObject, false);
-                    x.Piece.IsPutted = false;
+                    PutPieceInfo(x.Piece, 0, 0, false);
                 }
                 else
                 {
                     PutPieceUI(PiecesObject2[x.Piece.PieceNum].gameObject, x.CurrentColumn, x.CurrentRow);
-                    PutPieceInfo(x.Piece, x.CurrentColumn, x.CurrentRow);
+                    PutPieceInfo(x.Piece, x.CurrentColumn, x.CurrentRow, true);
                 }
             }
         }
         ChangeCost(-x.Piece.PieceCost);
         playerActions.RemoveAt(playerActions.Count - 1);
+        StartObserve();
     }
 
 
@@ -535,11 +538,12 @@ public class PlayerManager : MonoBehaviour
                 if (!x.OnBoard)
                 {
                     ChangeActiveUI(PiecesObject1[x.Piece.PieceNum].gameObject, true);
+                    PutPieceInfo(x.Piece, x.NextColumn, x.NextRow, true);
                 }
                 else
                 {
                     PutPieceUI(PiecesObject1[x.Piece.PieceNum].gameObject, x.NextColumn, x.NextRow);
-                    PutPieceInfo(x.Piece, x.NextColumn, x.NextRow);
+                    PutPieceInfo(x.Piece, x.NextColumn, x.NextRow, true);
                 }
             }
             else if (x.Player == PlayerType.Player2)
@@ -547,11 +551,12 @@ public class PlayerManager : MonoBehaviour
                 if (!x.OnBoard)
                 {
                     ChangeActiveUI(PiecesObject2[x.Piece.PieceNum].gameObject, true);
+                    PutPieceInfo(x.Piece, x.NextColumn, x.NextRow, true);
                 }
                 else
                 {
                     PutPieceUI(PiecesObject2[x.Piece.PieceNum].gameObject, x.NextColumn, x.NextRow);
-                    PutPieceInfo(x.Piece, x.NextColumn, x.NextRow);
+                    PutPieceInfo(x.Piece, x.NextColumn, x.NextRow, true);
                 }
             }
             yield return new WaitForSeconds(0.5f);
