@@ -1,13 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class TextMnager : MonoBehaviour {
 	
 	public GameObject win1;
 	public GameObject win2;
 	public GameObject draw;
-	public GameObject race;
 	public GameObject button;
 
 	// Use this for initialization
@@ -15,7 +15,6 @@ public class TextMnager : MonoBehaviour {
 		win1.SetActive (false);
 		win2.SetActive (false);
 		draw.SetActive (false);
-		race.SetActive (false);
 		button.SetActive (false);
 	}
 	
@@ -30,24 +29,32 @@ public class TextMnager : MonoBehaviour {
 
 		}
 	void Player1(){
-		//bgmload
-		//bgmplay
+		Sound.StopBgm();
+		Sound.LoadBgm("4", "4_result_?");
+		Sound.PlayBgm("4");
 		win1.SetActive (true);
-		race.SetActive (true);
 		button.SetActive (true);
 
 	}
 	void Player2(){
+		Sound.StopBgm();
+		Sound.LoadBgm("4", "4_result_?");
+        Sound.PlayBgm("4");
 		win2.SetActive (true);
-		race.SetActive (true);
 		button.SetActive (true);
 
 	}
 	void Player3(){
+		Sound.StopBgm();
+		Sound.LoadBgm("19", "19_draw");
+		Sound.PlayBgm("19");
 		draw.SetActive (true);
-		race.SetActive (true);
 		button.SetActive (true);
 
+	}
+
+	public void ReplayGame(){
+		SceneManager.LoadScene("Title");
 	}
 
 	

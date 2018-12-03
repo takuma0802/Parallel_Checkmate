@@ -22,7 +22,10 @@ public class GameStateReactiveProperty : ReactiveProperty<GameState>
     public GameStateReactiveProperty(GameState initialValue)
         : base(initialValue)
     {
+<<<<<<< HEAD
         
+=======
+>>>>>>> audio
     }
 }
 
