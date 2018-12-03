@@ -298,6 +298,8 @@ public class PlayerManager : MonoBehaviour
         target.transform.localPosition = boardManager.ReturnCellLocalPosition(column, row);
         ChangeActiveUI(target, true);
         // 音
+        Sound.LoadSe("9","9_komaidou");
+        Sound.PlaySe("9");
     }
 
     private void PutPieceInfo(PieceBase target, int column, int row, bool isPutted)
@@ -636,6 +638,8 @@ public class PlayerManager : MonoBehaviour
         {
             ChangeActiveUI(PiecesObject2[piece.PieceNum].gameObject, false);
         }
+        Sound.LoadSe("14","14_stop");
+        Sound.PlaySe("14");
     }
 
     public IEnumerator StartBattle()

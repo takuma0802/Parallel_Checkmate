@@ -33,17 +33,18 @@ public class GameManager : MonoBehaviour
                 //state.Red();
                 OnStateChanged(state);
             });
+
         stateUI.NextStateButton.OnClickAsObservable().Subscribe(_ =>
         {
             // ボタン押した音
-
+            Sound.LoadSe("5","5_start");
+            Sound.PlaySe("5");
         });
     }
 
     void OnStateChanged(GameState nextState)
     {
         stateUI.ActivateStateUI(CurrentState.Value);
-
         switch (nextState)
         {
             case GameState.Initializing:
@@ -89,9 +90,9 @@ public class GameManager : MonoBehaviour
     private IEnumerator ReadyCoroutine()
     {
         Debug.Log(CurrentState.Value);
-        yield return new WaitForSeconds(1.0f);
+        yield return null;
         // 画面がタップされるまで待つ
-        yield return stateUI.NextStateButton.OnClickAsObservable().First().ToYieldInstruction();
+        //yield return stateUI.NextStateButton.OnClickAsObservable().First().ToYieldInstruction();
         stateUI.DeactivateStateUI();
 
         if (PreviousState.Value == GameState.Player2)
@@ -107,7 +108,7 @@ public class GameManager : MonoBehaviour
     private IEnumerator StrategyTimeCoroutine()
     {
         Debug.Log(CurrentState.Value);
-        yield return new WaitForSeconds(1.0f);
+        yield return stateUI.NextStateButton.OnClickAsObservable().First().ToYieldInstruction();
         stateUI.DeactivateStateUI();
 
         // 戦略タイム
@@ -128,7 +129,7 @@ public class GameManager : MonoBehaviour
     private IEnumerator Battle()
     {
         Debug.Log(CurrentState.Value);
-        yield return new WaitForSeconds(2.0f);
+        yield return stateUI.NextStateButton.OnClickAsObservable().First().ToYieldInstruction();
         stateUI.DeactivateStateUI();
         // 移動を行う
         yield return playerManager.StartMove();
@@ -148,12 +149,11 @@ public class GameManager : MonoBehaviour
     private IEnumerator Result()
     {
         Debug.Log(CurrentState.Value);
-        yield return new WaitForSeconds(2.0f);
+        yield return new WaitForSeconds(1.0f);
         stateUI.DeactivateStateUI();
         // 王様が生きているかチェック
         if (!playerManager.player1win && !playerManager.player2win)
         {
-            yield return new WaitForSeconds(3.0f);
             CurrentState.Value = GameState.Ready;
         }
         else
@@ -184,6 +184,5 @@ public class GameManager : MonoBehaviour
             p2.SetActive(true);
         }
         resultUI.SetActive(true);
-        
     }
 }

@@ -12,6 +12,9 @@ public class GameStateUI : MonoBehaviour
     public Sprite[] TurnSprite;
     private Vector2 startPosition;
 
+    public Image turnImage2;
+    public Image turnImage3;
+
     public Button NextStateButton { get { return nextStateButton; } }
 
     void Start()
@@ -26,26 +29,32 @@ public class GameStateUI : MonoBehaviour
         switch (state)
         {
             case GameState.Initializing:
-                turnImage.sprite = null;
+                turnImage.gameObject.SetActive(false);
+                turnImage3.gameObject.SetActive(false);
                 break;
             case GameState.Ready:
-                turnImage.sprite = null;
+                turnImage.gameObject.SetActive(false);
+                turnImage3.gameObject.SetActive(true);
                 break;
             case GameState.Player1:
                 turnImage.sprite = TurnSprite[0];
+                turnImage2.sprite = TurnSprite[3];
+                turnImage.gameObject.SetActive(true);
                 break;
             case GameState.Player2:
                 turnImage.sprite = TurnSprite[1];
+                turnImage2.sprite = TurnSprite[4];
+                turnImage.gameObject.SetActive(true);
                 break;
             case GameState.Battle:
                 turnImage.sprite = TurnSprite[2];
+                turnImage.gameObject.SetActive(true);
                 break;
             case GameState.Result:
-                turnImage.sprite = null;
+                turnImage.gameObject.SetActive(false);
+                turnImage3.gameObject.SetActive(false);
                 break;
         }
-        //この辺適当にアニメーション
-        // rectTransform.DOLocalMoveX(this.transform.localPosition.x + 100f,1f);
     }
     public void DeactivateStateUI()
     {
