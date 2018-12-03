@@ -26,11 +26,18 @@ public class Tap : MonoBehaviour {
 			Sound.PlaySe("5");
 
 			}
-			if (Input.GetMouseButtonUp(0)) {
+		if (Input.GetMouseButtonUp(0)) {
 			Sound.PlaySe("5");
 
 			SceneManager.LoadScene("TestMain");
 			Sound.StopBgm();
+			Sound.LoadBgm("3", "3_battle");
+            Sound.PlayBgm("3");
 			}
+		if (Input.GetKey (KeyCode.A)){
+			SceneManager.LoadScene("resultscene");
 		}
+		}
+		
+
 }
