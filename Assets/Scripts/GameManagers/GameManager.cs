@@ -18,19 +18,22 @@ public class GameManager : MonoBehaviour
     [SerializeField] BoardManager boardManager;
     [SerializeField] PlayerManager playerManager;
 
-
+    public GameObject resultUI;
+    public GameObject drow;
+    public GameObject p1;
+    public GameObject p2;
     void Start()
     {
         playerManager = GetComponent<PlayerManager>();
-        if(!playerManager) gameObject.AddComponent<PlayerManager>();
-        if(!boardManager) GameObject.FindObjectOfType<BoardManager>();
+        if (!playerManager) gameObject.AddComponent<PlayerManager>();
+        if (!boardManager) GameObject.FindObjectOfType<BoardManager>();
 
         CurrentState.Subscribe(state =>
             {
                 //state.Red();
                 OnStateChanged(state);
             });
-        stateUI.NextStateButton.OnClickAsObservable().Subscribe(_ => 
+        stateUI.NextStateButton.OnClickAsObservable().Subscribe(_ =>
         {
             // ボタン押した音
 
@@ -106,7 +109,7 @@ public class GameManager : MonoBehaviour
         Debug.Log(CurrentState.Value);
         yield return new WaitForSeconds(1.0f);
         stateUI.DeactivateStateUI();
-        
+
         // 戦略タイム
         yield return playerManager.StartStrategy(CurrentState.Value);
 
@@ -148,18 +151,39 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(2.0f);
         stateUI.DeactivateStateUI();
         // 王様が生きているかチェック
-
-        // 両方生きてたら、次はReady
-
-        // 王様が死んでたら、次はFinished
-
-        yield return new WaitForSeconds(3.0f);
-        CurrentState.Value = GameState.Ready;
+        if (!playerManager.player1win && !playerManager.player2win)
+        {
+            yield return new WaitForSeconds(3.0f);
+            CurrentState.Value = GameState.Ready;
+        }
+        else
+        {
+            CurrentState.Value = GameState.Finished;
+        }
     }
 
     private void Finished()
     {
         Debug.Log(CurrentState.Value);
-        // Resultシーンへ遷移
+        if (playerManager.player1win && playerManager.player2win)
+        {
+            drow.SetActive(true);
+            p1.SetActive(false);
+            p2.SetActive(false);
+        }
+        else if (playerManager.player1win)
+        {
+            drow.SetActive(false);
+            p1.SetActive(true);
+            p2.SetActive(false);
+        }
+        else if (playerManager.player2win)
+        {
+            drow.SetActive(false);
+            p1.SetActive(false);
+            p2.SetActive(true);
+        }
+        resultUI.SetActive(true);
+        
     }
 }

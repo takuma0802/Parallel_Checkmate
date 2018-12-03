@@ -18,6 +18,8 @@ public class PlayerManager : MonoBehaviour
     [HideInInspector] public PieceBase[] Pieces1;
     [HideInInspector] public PieceBase[] Pieces2;
     [HideInInspector] public PieceProvider[] Kings;
+    public bool player1win = false;
+    public bool player2win = false;
 
     // 盤上に置くPieceのUIたち
     [HideInInspector] public PieceProvider[] PiecesObject1 = new PieceProvider[15];
@@ -706,7 +708,7 @@ public class PlayerManager : MonoBehaviour
             }
             if (cellNum == 15)
             {
-                //king[1]死亡
+                player1win = true;
             }
         }
         else if (player == PlayerType.Player2)
@@ -721,7 +723,7 @@ public class PlayerManager : MonoBehaviour
             }
             if (cellNum == 8)
             {
-                //king[0]死亡
+                player2win = true;
             }
         }
     }
