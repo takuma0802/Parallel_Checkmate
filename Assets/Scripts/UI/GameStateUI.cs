@@ -6,21 +6,22 @@ using DG.Tweening;
 public class GameStateUI : MonoBehaviour
 {
 
-    [SerializeField] RectTransform rectTransform;
-    [SerializeField] Button nextStateButton;
-    [SerializeField] Image turnImage;
-    public Sprite[] TurnSprite;
-    private Vector2 startPosition;
+    private RectTransform rectTransform;
+    [SerializeField] private Button nextStateButton;
+    [SerializeField] private Sprite[] strategyTurnSprite;
+    [SerializeField] private Sprite[] stateTurnSprite;
 
-    public Image turnImage2;
-    public Image turnImage3;
+    [SerializeField] private Image strategyTurnImage;
+    [SerializeField] private Image stateTurnImage;
+    [SerializeField] private GameObject tapToStartImage;
+    
 
     public Button NextStateButton { get { return nextStateButton; } }
 
     void Start()
     {
         rectTransform = GetComponent<RectTransform>();
-        startPosition = rectTransform.localPosition;
+        //startPosition = rectTransform.localPosition;
     }
 
     public void ActivateStateUI(GameState state)
@@ -29,30 +30,29 @@ public class GameStateUI : MonoBehaviour
         switch (state)
         {
             case GameState.Initializing:
-                turnImage.gameObject.SetActive(false);
-                turnImage3.gameObject.SetActive(false);
+                stateTurnImage.gameObject.SetActive(false);
                 break;
             case GameState.Ready:
-                turnImage.gameObject.SetActive(false);
-                turnImage3.gameObject.SetActive(true);
+                stateTurnImage.gameObject.SetActive(false);
                 break;
             case GameState.Player1:
-                turnImage.sprite = TurnSprite[0];
-                turnImage2.sprite = TurnSprite[3];
-                turnImage.gameObject.SetActive(true);
+                tapToStartImage.SetActive(true);
+                stateTurnImage.sprite = stateTurnSprite[0];
+                stateTurnImage.gameObject.SetActive(true);
+                strategyTurnImage.sprite = strategyTurnSprite[0];
                 break;
             case GameState.Player2:
-                turnImage.sprite = TurnSprite[1];
-                turnImage2.sprite = TurnSprite[4];
-                turnImage.gameObject.SetActive(true);
+                stateTurnImage.sprite = stateTurnSprite[1];
+                stateTurnImage.gameObject.SetActive(true);
+                strategyTurnImage.sprite = strategyTurnSprite[1];
+                tapToStartImage.SetActive(true);
                 break;
             case GameState.Battle:
-                turnImage.sprite = TurnSprite[2];
-                turnImage.gameObject.SetActive(true);
+                stateTurnImage.sprite = stateTurnSprite[2];
+                stateTurnImage.gameObject.SetActive(true);
                 break;
             case GameState.Result:
-                turnImage.gameObject.SetActive(false);
-                turnImage3.gameObject.SetActive(false);
+                stateTurnImage.gameObject.SetActive(false);
                 break;
         }
     }

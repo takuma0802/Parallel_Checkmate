@@ -49,6 +49,7 @@ public class BoardManager : MonoBehaviour
     {
         previousCells.Clear();
         observedCells.Clear();
+        
 
         if (transform.childCount == 0) return;
         ObjectCreator.DestroyAllChild(this.gameObject);
@@ -213,7 +214,7 @@ public class BoardManager : MonoBehaviour
         cell.ChangeButtonInteractable(true);
         cell.ChangeAvailableMarker(true);
         observedCells.Add(cell);
-        cell.CellButton.onClick.AddListener(() => OnClickedCellButton(cell));
+        cell.CellButton.OnClickAsObservable().Subscribe(_ => OnClickedCellButton(cell));
     }
 
     private void OnClickedCellButton(CellHandler cell)
@@ -237,6 +238,7 @@ public class BoardManager : MonoBehaviour
             cell.ChangeButtonInteractable(false);
             cell.CellButton.onClick.RemoveAllListeners();
         }
+        observedCells.Clear();
     }
 
     public List<CellHandler> ReturnPuttedCellList()

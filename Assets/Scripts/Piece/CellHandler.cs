@@ -20,7 +20,6 @@ public class CellHandler : MonoBehaviour
     private int row;
     private int column;
     private CellType cellType;
-    private Sequence sequence;
 
     public Button CellButton
     {
@@ -62,22 +61,8 @@ public class CellHandler : MonoBehaviour
         markerCell.SetActive(enable);
     }
 
-    public void ChangeToPutted()
-    {
-        if (cellType == CellType.Maker) return;
-        if (sequence != null) sequence.Kill();
-        //ChangeDefault(puttedCell);
-
-        cellType = CellType.Putted;
-        defaultCell.SetActive(false);
-        puttedCell.SetActive(true);
-    }
-
     public void ChangeToDefault()
     {
-        if (sequence != null) sequence.Kill();
-        //ChangeDefault(puttedCell);
-
         cellType = CellType.Default;
         defaultCell.SetActive(true);
         puttedCell.SetActive(false);
@@ -85,7 +70,6 @@ public class CellHandler : MonoBehaviour
 
     public void AttackAnimation()
     {
-        // ぼーん
         //attackCell.SetActive(true);
         Sound.LoadSe("10","10_komakougeki");
         Sound.PlaySe("10");
