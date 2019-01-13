@@ -8,59 +8,62 @@ using UnityEngine.UI;
 
 public class PlayerManager : MonoBehaviour
 {
-    // コストの最大値
-    public int AvailableCost = 5;
-    // 現状のコスト
-    public int currentCost;
-    private PlayerType player;
+    /// Manager
+    private TimeManager timeManager;
+    private BoardManager boardManager;
 
+    /// Player
+    [HideInInspector] public bool player1win = false;
+    [HideInInspector] public bool player2win = false;
+    private PlayerType player; // 現状のターンのPlayer
+    private List<PlayerAction> playerActions = new List<PlayerAction>(); // そのターンに起きたActionを全て登録
+    private PlayerAction playerAction; // その時のPlayerActionが保存される
+
+    /// Piece
+    [Header("Piece")]
+    [SerializeField] private GameObject[] piecePrefabs; // 各PieceObjectのPrefab(0:Piece1/ 1:Piece2...)
+    [SerializeField] private GameObject[] PlayerGameObject; // 生成されたPieceObjectを格納する親オブジェクト
+
+    // 各Plyerの保持しているPiece情報
     // 0~4:Piece1/ 5~8:Piece2/ 9~11:Piece3...
     [HideInInspector] public PieceBase[] Pieces1;
     [HideInInspector] public PieceBase[] Pieces2;
     [HideInInspector] public PieceProvider[] Kings;
-    public bool player1win = false;
-    public bool player2win = false;
-
-    // 盤上に置くPieceのUIたち
     [HideInInspector] public PieceProvider[] PiecesObject1 = new PieceProvider[15];
     [HideInInspector] public PieceProvider[] PiecesObject2 = new PieceProvider[15];
 
-    // 盤面に置かれているPieceの登録
-    private List<PieceBase> puttedPieces = new List<PieceBase>();
+    private List<PieceBase> puttedPieces = new List<PieceBase>(); // 盤上に置かれているPiece情報
+    private List<PieceBase> destroyObjects = new List<PieceBase>(); // そのターンで破壊されるPiece情報
 
-    // そのターンのP１とP２のActionを登録
-    private List<PlayerAction> playerActions = new List<PlayerAction>();
-    private PlayerAction playerAction;
-    private List<PieceBase> destroyObjects = new List<PieceBase>();
+    /// 手札
+    [Header("手札")]
+    [SerializeField] private Button[] holdingPieceButtons;
+    [SerializeField] private Image[] holdingPieceSprites; // 各手札の画像
+    [SerializeField] private Sprite[] pieceNumberSprites; // 手札の枚数を示す画像
 
-    public GameObject effect;
+    /// Cost
+    [Header("Cost")]
+    public int MaxCost = 5; // コスト最大値
+    private int currentCost; // 現状のコスト
+    [SerializeField] private Image costImage;
+    [SerializeField] private Sprite[] costNumberSprites;
 
+    /// その他
+    [Header("Other")]
+    [SerializeField] private GameObject StrategyUI;
+    [SerializeField] private GameObject attackEffectPrefab;
+    [SerializeField] private Button turnEndButton;
+    [SerializeField] private Button UndoButton;
+    private CompositeDisposable _compositeDisposable = new CompositeDisposable(); // 置くことが出来るCellの監視リスト    
+    //private bool canAction;
 
-    // 0:Piece1/ 1:Piece2/ 2:Piece3...
-    public GameObject[] piecePrefabs;
-    public GameObject[] PlayerGameObject;
-    public GameObject StrategyUI;
-    public Button[] holdingPieceButtons;
-    public Image[] holdingPieceImage;
-    public Sprite[] pieceNumberImage;
-    public Image costImage;
-    public Sprite[] costNumber;
-    public Button SubmitButton;
-    public Button UndoButton;
-
-    private TimeManager timeManager;
-    private BoardManager boardManager;
-
-    private bool canAction;
-
-    private CompositeDisposable _compositeDisposable = new CompositeDisposable();
-
+    // メインシーンが始まった際の初期化処理
     public IEnumerator InitializePlayer(BoardManager boardManager)
     {
         this.boardManager = boardManager;
         timeManager = GetComponent<TimeManager>();
         if (!timeManager) gameObject.AddComponent<TimeManager>();
-        canAction = false;
+        //canAction = false;
 
         ChangeActiveUI(StrategyUI, false);
 
@@ -79,7 +82,7 @@ public class PlayerManager : MonoBehaviour
         // 監視
         MessageBroker.Default.Receive<PlayerAction>().Subscribe(x =>
         {
-            canAction = false;
+            //canAction = false;
             DisposeAllStream();
             ChangeCost(x.Piece.PieceCost);
 
@@ -221,7 +224,7 @@ public class PlayerManager : MonoBehaviour
         StartObserve();
 
         // 決定ボタンが押される
-        yield return SubmitButton.OnClickAsObservable().First().ToYieldInstruction();
+        yield return turnEndButton.OnClickAsObservable().First().ToYieldInstruction();
 
         DisposeAllStream();
         ChangeActiveUI(StrategyUI, false);
@@ -241,7 +244,7 @@ public class PlayerManager : MonoBehaviour
             ObserveAvailablePieces(Pieces2, PiecesObject2);
         }
         ChangeActiveUI(StrategyUI, true);
-        canAction = true;
+        //canAction = true;
     }
 
     private IEnumerator Reset()
@@ -249,11 +252,11 @@ public class PlayerManager : MonoBehaviour
         // 現在の置かれているPieceを更新
         SearchPuttedPieces(Pieces1);
         SearchPuttedPieces(Pieces2);
-        foreach(var pieceObj in PiecesObject1)
+        foreach (var pieceObj in PiecesObject1)
         {
             pieceObj.ChangeAttackIcon(false);
         }
-        foreach(var pieceObj in PiecesObject2)
+        foreach (var pieceObj in PiecesObject2)
         {
             pieceObj.ChangeAttackIcon(false);
         }
@@ -265,14 +268,14 @@ public class PlayerManager : MonoBehaviour
 
     private void ResetCost()
     {
-        currentCost = 5;
-        costImage.sprite = costNumber[currentCost];
+        currentCost = MaxCost;
+        costImage.sprite = costNumberSprites[currentCost];
     }
 
     private void ChangeCost(int cost)
     {
         currentCost -= cost;
-        costImage.sprite = costNumber[currentCost];
+        costImage.sprite = costNumberSprites[currentCost];
     }
 
     ////////  盤上のPiece配置周り
@@ -314,8 +317,7 @@ public class PlayerManager : MonoBehaviour
         target.Column = column;
         target.Row = row;
         target.IsPutted = isPutted;
-        // 音
-        Sound.LoadSe("9","9_komaidou");
+        Sound.LoadSe("9", "9_komaidou");
         Sound.PlaySe("9");
     }
 
@@ -329,11 +331,11 @@ public class PlayerManager : MonoBehaviour
         int piece4num = pieces.Where(i => i.PieceType == PieceType.Piece4 && !i.IsPutted && !i.IsDestroyed).Count();
         int piece5num = pieces.Where(i => i.PieceType == PieceType.Piece5 && !i.IsPutted && !i.IsDestroyed).Count();
 
-        holdingPieceImage[0].sprite = pieceNumberImage[piece1num];
-        holdingPieceImage[1].sprite = pieceNumberImage[piece2num];
-        holdingPieceImage[2].sprite = pieceNumberImage[piece3num];
-        holdingPieceImage[3].sprite = pieceNumberImage[piece4num];
-        holdingPieceImage[4].sprite = pieceNumberImage[piece5num];
+        holdingPieceSprites[0].sprite = pieceNumberSprites[piece1num];
+        holdingPieceSprites[1].sprite = pieceNumberSprites[piece2num];
+        holdingPieceSprites[2].sprite = pieceNumberSprites[piece3num];
+        holdingPieceSprites[3].sprite = pieceNumberSprites[piece4num];
+        holdingPieceSprites[4].sprite = pieceNumberSprites[piece5num];
 
         if (piece1num >= 1 && currentCost >= 1)
             ActivateHoldingPiece(holdingPieceButtons[0], PieceType.Piece1);
@@ -375,8 +377,6 @@ public class PlayerManager : MonoBehaviour
     {
         button.interactable = false;
     }
-
-
 
     // Board上にあるPieceの中で、置けるPieceを監視
     private void ObserveAvailablePieces(PieceBase[] pieces, PieceProvider[] piecesObj)
@@ -454,7 +454,7 @@ public class PlayerManager : MonoBehaviour
     private void DisposeAllStream()
     {
         _compositeDisposable.Clear();
-        boardManager.RemoveAllBtnAction();
+        //boardManager.RemoveAllBtnAction();
         //PiecesObject1[x.Piece.PieceNum].ChangeAttackIcon(false);
     }
 
@@ -557,11 +557,11 @@ public class PlayerManager : MonoBehaviour
     ///// Battle周り
     public IEnumerator StartMove()
     {
-        foreach(var pieceObj in PiecesObject1)
+        foreach (var pieceObj in PiecesObject1)
         {
             pieceObj.ChangeAttackIcon(false);
         }
-        foreach(var pieceObj in PiecesObject2)
+        foreach (var pieceObj in PiecesObject2)
         {
             pieceObj.ChangeAttackIcon(false);
         }
@@ -604,7 +604,6 @@ public class PlayerManager : MonoBehaviour
 
     public IEnumerator ExcecuteMoveDestroy()
     {
-        Debug.Log("ExcecuteMoveDestroy");
         if (playerActions.Count == 0) yield break;
 
         PieceBase[] puttedPieces1 = Pieces1.Where(i => i.IsPutted && !i.IsDestroyed).ToArray();
@@ -637,7 +636,6 @@ public class PlayerManager : MonoBehaviour
 
         foreach (PieceBase piece in destroyObjects)
         {
-            Debug.Log(piece.Player + "の" + piece.PieceType + " " + piece.PieceNum + "をDestroy");
             DestroyPiece(piece);
         }
         destroyObjects.Clear();
@@ -657,13 +655,12 @@ public class PlayerManager : MonoBehaviour
         {
             ChangeActiveUI(PiecesObject2[piece.PieceNum].gameObject, false);
         }
-        Sound.LoadSe("14","14_stop");
+        Sound.LoadSe("14", "14_stop");
         Sound.PlaySe("14");
     }
 
     public IEnumerator StartBattle()
     {
-        Debug.Log("StartBattle");
         if (playerActions.Count == 0) yield break;
 
         foreach (PlayerAction x in playerActions)
@@ -684,7 +681,6 @@ public class PlayerManager : MonoBehaviour
         var player = playerAction.Player;
         var column = playerAction.CurrentColumn;
         var row = playerAction.CurrentRow;
-        Debug.Log("SearchAttackAvailablePoint：" + player + "の" + type + "が攻撃");
 
         switch (type)
         {
@@ -715,7 +711,7 @@ public class PlayerManager : MonoBehaviour
     {
         //UI表示
         //boardManager.AttackAnimation(column, row);
-        PutPieceUI(effect,column,row);
+        PutPieceUI(attackEffectPrefab, column, row);
 
         // このCellに敵がいるかチェックして追加
         var cellNum = row * 8 + column;
@@ -725,8 +721,6 @@ public class PlayerManager : MonoBehaviour
             var pieces = Pieces2.Where(i => i.IsPutted && !i.IsDestroyed).ToArray();
             foreach (var piece in pieces)
             {
-                Debug.Log(piece.Player + piece.PieceType.ToString());
-                Debug.Log("piece column row"+piece.Column + piece.Row);
                 var pieceNum = piece.Row * 8 + piece.Column;
                 if (pieceNum == cellNum) destroyObjects.Add(piece);
             }
@@ -740,8 +734,6 @@ public class PlayerManager : MonoBehaviour
             var pieces = Pieces1.Where(i => i.IsPutted && !i.IsDestroyed).ToArray();
             foreach (var piece in pieces)
             {
-                Debug.Log(piece.Player + piece.PieceType.ToString());
-                Debug.Log("piece column row"+piece.Column + piece.Row);
                 var pieceNum = piece.Row * 8 + piece.Column;
                 if (pieceNum == cellNum) destroyObjects.Add(piece);
             }
@@ -810,10 +802,23 @@ public class PlayerManager : MonoBehaviour
 
         foreach (PieceBase piece in destroyObjects)
         {
-            Debug.Log(piece.Player + "の" + piece.PieceType + " " + piece.PieceNum + "をDestroy");
             DestroyPiece(piece);
         }
         destroyObjects.Clear();
         yield return null;
+    }
+
+    public int GetResult()
+    {
+        if (!player1win && !player2win) return 0;
+        if (player1win && player2win) return 3;
+        if (player1win)
+        {
+            return 1;
+        }
+        else
+        {
+            return 2;
+        }
     }
 }

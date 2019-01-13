@@ -29,15 +29,10 @@ public class Tap : MonoBehaviour
         if (Input.GetMouseButtonUp(0))
         {
             Sound.PlaySe("5");
-            SceneManager.LoadScene("TestMain");
+            SceneManager.LoadScene("TestMain",LoadSceneMode.Single);
             Sound.StopBgm();
             Sound.LoadBgm("2", "2_senryak");
             Sound.PlayBgm("2");
-        }
-        if (Input.GetKey(KeyCode.A))
-        {
-            SceneManager.LoadScene("resultscene");
-            Sound.StopBgm();
         }
     }
 }
