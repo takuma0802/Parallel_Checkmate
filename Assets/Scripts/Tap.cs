@@ -29,7 +29,7 @@ public class Tap : MonoBehaviour
         if (Input.GetMouseButtonUp(0))
         {
             Sound.PlaySe("5");
-            SceneManager.LoadScene("TestMain",LoadSceneMode.Single);
+            SceneManager.LoadScene("Main",LoadSceneMode.Single);
             Sound.StopBgm();
             Sound.LoadBgm("2", "2_senryak");
             Sound.PlayBgm("2");
