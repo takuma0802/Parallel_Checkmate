@@ -17,7 +17,6 @@ public class GameManager : MonoBehaviour
     [SerializeField] ResultManager resultManager;
     private int result;
 
-
     void Start()
     {
         playerManager = GetComponent<PlayerManager>();
@@ -25,10 +24,10 @@ public class GameManager : MonoBehaviour
         if (!boardManager) GameObject.FindObjectOfType<BoardManager>();
         if (!resultManager) GameObject.FindObjectOfType<ResultManager>();
 
-        StartStream();
+        StartStateObsetveStream();
     }
 
-    private void StartStream()
+    private void StartStateObsetveStream()
     {
         stateUI.NextStateButton.OnClickAsObservable().Subscribe(_ =>
         {
@@ -38,7 +37,6 @@ public class GameManager : MonoBehaviour
 
         CurrentState.Subscribe(state =>
             {
-                //state.Red();
                 OnStateChanged(state);
             });
     }
@@ -52,22 +50,22 @@ public class GameManager : MonoBehaviour
                 StartCoroutine(InitializeCoroutine());
                 break;
             case GameState.Ready:
-                Ready();
+                PlayerChangeState();
                 break;
             case GameState.Player1:
-                StartCoroutine(StrategyTimeCoroutine());
+                StartCoroutine(StrategyTimeState());
                 break;
             case GameState.Player2:
-                StartCoroutine(StrategyTimeCoroutine());
+                StartCoroutine(StrategyTimeState());
                 break;
             case GameState.Battle:
-                StartCoroutine(Battle());
+                StartCoroutine(BattleState());
                 break;
             case GameState.Result:
-                Result();
+                ButtleResultState();
                 break;
             case GameState.Finished:
-                Finished();
+                GameFinishState();
                 break;
             default:
                 break;
@@ -80,15 +78,12 @@ public class GameManager : MonoBehaviour
         yield return boardManager.CreateBoard();
         yield return playerManager.InitializePlayer(boardManager);
 
-        // 画面がタップされるまで待つ
-        // yield return stateUI.NextStateButton.OnClickAsObservable().First().ToYieldInstruction();
         stateUI.DeactivateStateUI();
-
         CurrentState.Value = GameState.Ready;
     }
 
     // Player確認UI表示
-    private void Ready()
+    private void PlayerChangeState()
     {
         Debug.Log(CurrentState.Value);
         stateUI.DeactivateStateUI();
@@ -103,7 +98,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private IEnumerator StrategyTimeCoroutine()
+    private IEnumerator StrategyTimeState()
     {
         Debug.Log(CurrentState.Value);
         yield return stateUI.NextStateButton.OnClickAsObservable().First().ToYieldInstruction();
@@ -112,7 +107,7 @@ public class GameManager : MonoBehaviour
         Sound.PlaySe("13");
         stateUI.DeactivateStateUI();
 
-        // 戦略タイム
+        // 戦略タイムが終わるまで待つ
         yield return playerManager.StartStrategy(CurrentState.Value);
 
         if (CurrentState.Value == GameState.Player1)
@@ -127,7 +122,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private IEnumerator Battle()
+    private IEnumerator BattleState()
     {
         Debug.Log(CurrentState.Value);
         yield return stateUI.NextStateButton.OnClickAsObservable().First().ToYieldInstruction();
@@ -150,7 +145,7 @@ public class GameManager : MonoBehaviour
         CurrentState.Value = GameState.Result;
     }
 
-    private void Result()
+    private void ButtleResultState()
     {
         Debug.Log(CurrentState.Value);
         stateUI.DeactivateStateUI();
@@ -166,9 +161,9 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void Finished()
+    private void GameFinishState()
     {
         Debug.Log(CurrentState.Value);
-        resultManager.ShowResultUI(result);
+        resultManager.ShowResult(result);
     }
 }
