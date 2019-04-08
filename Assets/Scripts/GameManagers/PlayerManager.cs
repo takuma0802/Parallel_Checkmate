@@ -28,7 +28,7 @@ public class PlayerManager : MonoBehaviour
     // 0~4:Piece1/ 5~8:Piece2/ 9~11:Piece3...
     [HideInInspector] public PieceBase[] Pieces1;
     [HideInInspector] public PieceBase[] Pieces2;
-    [HideInInspector] public PieceProvider[] Kings;
+    [HideInInspector] public PieceProvider[] Kings = new PieceProvider[2];
     [HideInInspector] public PieceProvider[] PiecesObject1 = new PieceProvider[15];
     [HideInInspector] public PieceProvider[] PiecesObject2 = new PieceProvider[15];
 
@@ -312,11 +312,11 @@ public class PlayerManager : MonoBehaviour
         ChangeActiveUI(target, true);
     }
 
-    private void PutPieceInfo(PieceBase target, int column, int row, bool isPutted)
+    private void PutPieceInfo(PieceBase targetPiece, int column, int row, bool isPutted)
     {
-        target.Column = column;
-        target.Row = row;
-        target.IsPutted = isPutted;
+        targetPiece.Column = column;
+        targetPiece.Row = row;
+        targetPiece.IsPutted = isPutted;
         Sound.LoadSe("9", "9_komaidou");
         Sound.PlaySe("9");
     }
@@ -808,17 +808,15 @@ public class PlayerManager : MonoBehaviour
         yield return null;
     }
 
+    // 返り値 0:続行, 1:1P勝利, 2:2P勝利, 3:引き分け
     public int GetResult()
     {
         if (!player1win && !player2win) return 0;
         if (player1win && player2win) return 3;
+        
         if (player1win)
-        {
             return 1;
-        }
         else
-        {
             return 2;
-        }
     }
 }
