@@ -12,7 +12,7 @@ public class Piece1 : PieceBase
 
     public override void Move()
     {
-
+        
     }
 
     public override void Attack()

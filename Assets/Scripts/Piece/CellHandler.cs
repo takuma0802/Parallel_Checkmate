@@ -8,7 +8,6 @@ public enum CellType
 {
     Default,
     Putted,
-    Maker,
     King
 }
 
