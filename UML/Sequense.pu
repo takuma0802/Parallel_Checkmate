@@ -1,0 +1,24 @@
+@startuml SequenceDiagram
+
+participant GameManager as gm
+participant PlayerManager as pm
+participant PieceBase as pb
+participant PieceProvider as pp
+participant BoardManager as bm
+participant CellHandler as ch
+
+== Now ==
+gm -> pm : StartStrategy()
+pm ->> pp : ChangeAttackAicon(false)
+
+
+== Ideal ==
+gm -> pm : StartStrategy()
+group Reset
+activate pm
+pm -> pm : Reset
+pm -> 
+deactivate pm
+end
+
+@enduml
