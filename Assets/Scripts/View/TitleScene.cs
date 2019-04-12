@@ -34,9 +34,6 @@ public class TitleScene : MonoBehaviour
     private IEnumerator TapScreen()
     {
         Sound.PlaySe("5");
-        Sound.StopBgm();
-        Sound.LoadBgm("2", "2_senryak");
-        Sound.PlayBgm("2");
         yield return new WaitForSeconds(1f);
         SceneManager.LoadScene("Main", LoadSceneMode.Single);
     }

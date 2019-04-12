@@ -19,12 +19,20 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        StartBGM();
         playerManager = GetComponent<PlayerManager>();
         if (!playerManager) gameObject.AddComponent<PlayerManager>();
         if (!boardManager) GameObject.FindObjectOfType<BoardManager>();
         if (!resultManager) GameObject.FindObjectOfType<ResultManager>();
 
         StartStateObsetveStream();
+    }
+
+    private void StartBGM()
+    {
+        Sound.StopBgm();
+        Sound.LoadBgm("2", "2_senryak");
+        Sound.PlayBgm("2");
     }
 
     private void StartStateObsetveStream()
