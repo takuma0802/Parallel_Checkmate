@@ -3,63 +3,103 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
+using UniRx;
+
 public class GameStateUI : MonoBehaviour
 {
-
     private RectTransform rectTransform;
-    [SerializeField] private Button nextStateButton;
-    [SerializeField] private Sprite[] strategyTurnSprite;
-    [SerializeField] private Sprite[] stateTurnSprite;
+    private Tweener moveSequence;
 
-    [SerializeField] private Image strategyTurnImage;
+    [SerializeField] private RectTransform startPosition, endPosition;
+    [SerializeField] private float moveTime = 0.6f;
+    [SerializeField] private Sprite[] strategyTurnSprite; // ここ最終的に他に移動
+    [SerializeField] private Sprite[] stateTurnSprite;
+    [SerializeField] private Image strategyTurnImage; // ここ最終的に他に移動
     [SerializeField] private Image stateTurnImage;
     [SerializeField] private GameObject tapToStartImage;
-    
-
+    [SerializeField] private Button nextStateButton;
     public Button NextStateButton { get { return nextStateButton; } }
 
-    void Start()
+    
+    
+
+    public void Initialize(GameStateReactiveProperty gameState)
     {
         rectTransform = GetComponent<RectTransform>();
-        //startPosition = rectTransform.localPosition;
+        ResetStateUIPosition();
+
+        gameState.Subscribe(state =>
+            {
+                ActivateStateUI(state);
+            });
+
+        nextStateButton.OnClickAsObservable().Subscribe(_ =>
+        {
+            Sound.LoadSe("5", "5_start");
+            Sound.PlaySe("5");
+        });
     }
 
-    public void ActivateStateUI(GameState state)
+    private void ActivateStateUI(GameState state)
     {
-        gameObject.SetActive(true);
         switch (state)
         {
             case GameState.Initializing:
-                stateTurnImage.gameObject.SetActive(false);
                 break;
+
             case GameState.Ready:
-                stateTurnImage.gameObject.SetActive(false);
                 break;
+
             case GameState.Player1:
-                tapToStartImage.SetActive(true);
-                stateTurnImage.sprite = stateTurnSprite[0];
-                stateTurnImage.gameObject.SetActive(true);
-                strategyTurnImage.sprite = strategyTurnSprite[0];
+                ChangeStateUI(0);
+                StartCoroutine(AppearStateUI());
+                strategyTurnImage.sprite = strategyTurnSprite[0]; // ここ最終的に他に移動
                 break;
+
             case GameState.Player2:
-                stateTurnImage.sprite = stateTurnSprite[1];
-                stateTurnImage.gameObject.SetActive(true);
-                strategyTurnImage.sprite = strategyTurnSprite[1];
-                tapToStartImage.SetActive(true);
+                ChangeStateUI(1);
+                StartCoroutine(AppearStateUI());
+                strategyTurnImage.sprite = strategyTurnSprite[1]; // ここ最終的に他に移動
                 break;
+
             case GameState.Battle:
-                stateTurnImage.sprite = stateTurnSprite[2];
-                stateTurnImage.gameObject.SetActive(true);
+                ChangeStateUI(2);
+                StartCoroutine(AppearStateUI());
                 break;
+
             case GameState.Result:
-                stateTurnImage.gameObject.SetActive(false);
                 break;
         }
     }
-    public void DeactivateStateUI()
+
+    // stateNum => 0:1P,1:2P,3:Battle
+    private void ChangeStateUI(int stateNum)
     {
-        //この辺適当にアニメーション
-        // rectTransform.DOLocalMoveX(StateUI.localPosition.x + 100f,1f);
-        rectTransform.gameObject.SetActive(false);
+        stateTurnImage.sprite = stateTurnSprite[stateNum];
+        stateTurnImage.gameObject.SetActive(true);
+        tapToStartImage.SetActive(true);
+        gameObject.SetActive(true);
+    }
+
+    public IEnumerator AppearStateUI()
+    {
+        moveSequence = rectTransform.DOLocalMoveX(0, moveTime);
+        yield return moveSequence.WaitForCompletion();
+        nextStateButton.interactable = true;
+    }
+
+    public IEnumerator DisappearStateUI()
+    {
+        moveSequence = rectTransform.DOLocalMoveX(endPosition.localPosition.x, moveTime);
+        yield return moveSequence.WaitForCompletion();
+        ResetStateUIPosition();
+    }
+
+    private void ResetStateUIPosition()
+    {
+        rectTransform.localPosition = startPosition.localPosition;
+        gameObject.SetActive(false);
+        tapToStartImage.SetActive(false);
+        nextStateButton.interactable = false;
     }
 }

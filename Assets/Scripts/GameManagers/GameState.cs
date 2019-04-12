@@ -24,4 +24,3 @@ public class GameStateReactiveProperty : ReactiveProperty<GameState>
     {
     }
 }
-

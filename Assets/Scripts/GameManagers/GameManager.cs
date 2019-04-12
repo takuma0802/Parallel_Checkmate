@@ -8,8 +8,8 @@ using DG.Tweening;
 
 public class GameManager : MonoBehaviour
 {
-    [SerializeField] private GameStateReactiveProperty CurrentState = new GameStateReactiveProperty(GameState.Initializing);
-    [SerializeField] private GameStateReactiveProperty PreviousState = new GameStateReactiveProperty(GameState.Player2);
+    private GameStateReactiveProperty CurrentState = new GameStateReactiveProperty(GameState.Initializing);
+    private GameStateReactiveProperty PreviousState = new GameStateReactiveProperty(GameState.Player2);
 
     [SerializeField] GameStateUI stateUI;
     [SerializeField] BoardManager boardManager;
@@ -19,29 +19,26 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        StartBGM();
         playerManager = GetComponent<PlayerManager>();
         if (!playerManager) gameObject.AddComponent<PlayerManager>();
         if (!boardManager) GameObject.FindObjectOfType<BoardManager>();
         if (!resultManager) GameObject.FindObjectOfType<ResultManager>();
+        if (!stateUI) GameObject.FindObjectOfType<GameStateUI>();
 
-        StartStateObsetveStream();
+        SatrtBGM();
+        Initialize();
     }
 
-    private void StartBGM()
+    private void SatrtBGM()
     {
         Sound.StopBgm();
         Sound.LoadBgm("2", "2_senryak");
         Sound.PlayBgm("2");
     }
 
-    private void StartStateObsetveStream()
+    private void Initialize()
     {
-        stateUI.NextStateButton.OnClickAsObservable().Subscribe(_ =>
-        {
-            Sound.LoadSe("5", "5_start");
-            Sound.PlaySe("5");
-        });
+        stateUI.Initialize(CurrentState);
 
         CurrentState.Subscribe(state =>
             {
@@ -51,7 +48,6 @@ public class GameManager : MonoBehaviour
 
     void OnStateChanged(GameState nextState)
     {
-        stateUI.ActivateStateUI(CurrentState.Value);
         switch (nextState)
         {
             case GameState.Initializing:
@@ -82,20 +78,14 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator InitializeCoroutine()
     {
-        Debug.Log(CurrentState.Value);
         yield return boardManager.CreateBoard();
         yield return playerManager.InitializePlayer(boardManager);
-
-        stateUI.DeactivateStateUI();
         CurrentState.Value = GameState.Ready;
     }
 
     // Player確認UI表示
     private void PlayerChangeState()
     {
-        Debug.Log(CurrentState.Value);
-        stateUI.DeactivateStateUI();
-
         if (PreviousState.Value == GameState.Player2)
         {
             CurrentState.Value = GameState.Player1;
@@ -108,12 +98,11 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator StrategyTimeState()
     {
-        Debug.Log(CurrentState.Value);
         yield return stateUI.NextStateButton.OnClickAsObservable().First().ToYieldInstruction();
         
         Sound.LoadSe("13", "13_junbi");
         Sound.PlaySe("13");
-        stateUI.DeactivateStateUI();
+        yield return stateUI.DisappearStateUI();
 
         // 戦略タイムが終わるまで待つ
         yield return playerManager.StartStrategy(CurrentState.Value);
@@ -132,12 +121,12 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator BattleState()
     {
-        Debug.Log(CurrentState.Value);
         yield return stateUI.NextStateButton.OnClickAsObservable().First().ToYieldInstruction();
+        
         Sound.LoadSe("7", "7_koutai");
         Sound.PlaySe("7");
-        stateUI.DeactivateStateUI();
-        
+        yield return stateUI.DisappearStateUI();
+
         // 移動
         yield return playerManager.StartMove();
 
@@ -155,11 +144,9 @@ public class GameManager : MonoBehaviour
 
     private void ButtleResultState()
     {
-        Debug.Log(CurrentState.Value);
-        stateUI.DeactivateStateUI();
         // 王様が生きているかチェック
         result = playerManager.GetResult();
-        if(result == 0)
+        if (result == 0)
         {
             CurrentState.Value = GameState.Ready;
         }
@@ -171,7 +158,6 @@ public class GameManager : MonoBehaviour
 
     private void GameFinishState()
     {
-        Debug.Log(CurrentState.Value);
         resultManager.ShowResult(result);
     }
 }
