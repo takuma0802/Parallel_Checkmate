@@ -10,7 +10,8 @@ public class GameStateUI : MonoBehaviour
     private RectTransform rectTransform;
     private Tweener moveSequence;
 
-    [SerializeField] private RectTransform startPosition, endPosition;
+    [SerializeField] private RectTransform startPosition;
+    [SerializeField] private RectTransform endPosition;
     [SerializeField] private float moveTime = 0.6f;
     [SerializeField] private Sprite[] strategyTurnSprite; // ここ最終的に他に移動
     [SerializeField] private Sprite[] stateTurnSprite;
