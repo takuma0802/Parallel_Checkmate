@@ -252,9 +252,9 @@ public class PlayerManager : MonoBehaviour
     {
         // のちのち消したい
         // 現在の置かれているPieceを更新
-        SearchPuttedPieces(Pieces1);
-        SearchPuttedPieces(Pieces2);
-        SetPuttedPieces();
+        // SearchPuttedPieces(Pieces1);
+        // SearchPuttedPieces(Pieces2);
+        //SetPuttedPieces();
 
         for (var i = 0; i < PiecesObject1.Length; i++)
         {
@@ -313,15 +313,15 @@ public class PlayerManager : MonoBehaviour
             //SetActiveUI(target, true);
             var targetPos = boardManager.ReturnCellLocalPosition(column, row);
             var moveSequence = target.transform.DOLocalMove(targetPos, 0.5f);
-            yield return moveSequence;
-            Sound.LoadSe("9", "9_komaidou");
-            Sound.PlaySe("9");
+            yield return moveSequence.WaitForCompletion();
         }
         else
         {
             target.transform.localPosition = boardManager.ReturnCellLocalPosition(column, row);
             SetActiveUI(target, true);
         }
+        Sound.LoadSe("9", "9_komaidou");
+        Sound.PlaySe("9");
     }
 
     private void SetPieceInfo(PieceBase targetPiece, int column, int row, bool isPutted, bool isDestroyed)
@@ -394,7 +394,6 @@ public class PlayerManager : MonoBehaviour
             if (piece.IsDestroyed) continue;
             if (!piece.IsPutted) continue;
             if (piece.PieceCost > currentCost) continue;
-
             var stream = piecesObj[piece.PieceNum].pieceButton
                 .OnClickAsObservable().Subscribe(_ =>
                 {
@@ -547,6 +546,7 @@ public class PlayerManager : MonoBehaviour
         {
             if (pAction.Action == PieceAction.Attack) yield break;
             yield return ExecuteMovePiece(pAction);
+            yield return new WaitForSeconds(0.5f);
         }
     }
 
@@ -554,14 +554,13 @@ public class PlayerManager : MonoBehaviour
     {
         if (pAction.Player == PlayerType.Player1)
         {
-            yield return MovePieceUI(PiecesObject1[pAction.Piece.PieceNum].gameObject, pAction.NextColumn, pAction.NextRow, pAction.OnBoard);
             SetPieceInfo(pAction.Piece, pAction.NextColumn, pAction.NextRow, true, false);
+            yield return MovePieceUI(PiecesObject1[pAction.Piece.PieceNum].gameObject, pAction.NextColumn, pAction.NextRow, pAction.OnBoard);
         }
         else if (pAction.Player == PlayerType.Player2)
         {
-
-            yield return MovePieceUI(PiecesObject2[pAction.Piece.PieceNum].gameObject, pAction.NextColumn, pAction.NextRow, pAction.OnBoard);
             SetPieceInfo(pAction.Piece, pAction.NextColumn, pAction.NextRow, true, false);
+            yield return MovePieceUI(PiecesObject2[pAction.Piece.PieceNum].gameObject, pAction.NextColumn, pAction.NextRow, pAction.OnBoard);
         }
     }
 

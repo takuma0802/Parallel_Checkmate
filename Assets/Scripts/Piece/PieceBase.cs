@@ -18,10 +18,10 @@ public abstract class PieceBase : IPieceAction
     protected int pieceCost;
     public int PieceCost { get { return pieceCost; } }
 
-    private int column;
-    private int row;
-    private bool isPutted;
-    private bool isDestroyed;
+    protected int column;
+    protected int row;
+    protected bool isPutted;
+    protected bool isDestroyed;
 
     public int Column { get { return column; } }
     public int Row { get { return row; } }

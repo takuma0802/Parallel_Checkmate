@@ -1720,6 +1720,7 @@ GameObject:
   - component: {fileID: 893661548}
   - component: {fileID: 893661550}
   - component: {fileID: 893661549}
+  - component: {fileID: 893661551}
   m_Layer: 0
   m_Name: TapToStartImage
   m_TagString: Untagged
@@ -1778,6 +1779,18 @@ CanvasRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 893661547}
+--- !u!114 &893661551
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 893661547}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a26a7aed0e0c84de9b877d3a47be6946, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  angularFrequency: 7.5
 --- !u!1 &907640829
 GameObject:
   m_ObjectHideFlags: 0
@@ -3655,7 +3668,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 774, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1778495755
@@ -3671,6 +3684,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   startPosition: {fileID: 1760925318}
   endPosition: {fileID: 1779204152}
+  moveTime: 0.6
   strategyTurnSprite:
   - {fileID: 21300000, guid: 10d5fe728f54947e594f341ffa111993, type: 3}
   - {fileID: 21300000, guid: b44b6d1e2a697483c9c75afb78c886f7, type: 3}
