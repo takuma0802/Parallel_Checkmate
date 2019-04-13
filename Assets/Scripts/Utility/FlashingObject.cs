@@ -14,12 +14,14 @@ public class FlashingObject : MonoBehaviour
     {
         float time = 0.0f;
         image = GetComponent<Image>();
-        Observable.Interval(TimeSpan.FromSeconds(Time.deltaTime)).Subscribe(_ =>
-          {
-              time += angularFrequency * Time.deltaTime;
-              var color = image.color;
-              color.a = Mathf.Sin(time) * 0.5f + 0.5f;
-              image.color = color;
-          }).AddTo(this);
+        Observable.Interval(TimeSpan.FromSeconds(Time.deltaTime))
+            .Where(_ => this.gameObject.activeInHierarchy)
+            .Subscribe(_ =>
+            {
+                time += angularFrequency * Time.deltaTime;
+                var color = image.color;
+                color.a = Mathf.Sin(time) * 0.5f + 0.5f;
+                image.color = color;
+            }).AddTo(this);
     }
 }
