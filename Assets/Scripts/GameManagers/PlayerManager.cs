@@ -196,12 +196,12 @@ public class PlayerManager : MonoBehaviour
         {
             obj.transform.localScale = new Vector3(0, 0, 0);
             obj.SetActive(enabled);
-            obj.transform.DOScale(1f, 0.3f);
+            obj.transform.DOScale(1f, 0.3f).SetEase(Ease.InQuad);
         }
         else
         {
             obj.transform.localScale = new Vector3(1, 1, 1);
-            obj.transform.DOScale(0f, 0.3f);
+            obj.transform.DOScale(0f, 0.3f).SetEase(Ease.OutQuint);
             obj.SetActive(enabled);
         }
     }
@@ -273,7 +273,7 @@ public class PlayerManager : MonoBehaviour
         if (isAnimation)
         {
             var targetPos = boardManager.ReturnCellLocalPosition(column, row);
-            var moveSequence = target.transform.DOLocalMove(targetPos, 0.5f);
+            var moveSequence = target.transform.DOLocalMove(targetPos, 0.5f).SetEase(Ease.OutQuint);
             yield return moveSequence.WaitForCompletion();
         }
         else
@@ -512,14 +512,13 @@ public class PlayerManager : MonoBehaviour
 
     private IEnumerator ExecuteMovePiece(PlayerAction pAction)
     {
+        SetPieceInfo(pAction.Piece, pAction.NextColumn, pAction.NextRow, true, false);
         if (pAction.Player == PlayerType.Player1)
         {
-            SetPieceInfo(pAction.Piece, pAction.NextColumn, pAction.NextRow, true, false);
             yield return MovePieceUI(PiecesObject1[pAction.Piece.PieceNum].gameObject, pAction.NextColumn, pAction.NextRow, pAction.OnBoard);
         }
         else if (pAction.Player == PlayerType.Player2)
         {
-            SetPieceInfo(pAction.Piece, pAction.NextColumn, pAction.NextRow, true, false);
             yield return MovePieceUI(PiecesObject2[pAction.Piece.PieceNum].gameObject, pAction.NextColumn, pAction.NextRow, pAction.OnBoard);
         }
     }

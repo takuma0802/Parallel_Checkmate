@@ -81,14 +81,14 @@ public class GameStateUI : MonoBehaviour
 
     public IEnumerator AppearStateUI()
     {
-        moveSequence = rectTransform.DOLocalMoveX(0, moveTime);
+        moveSequence = rectTransform.DOLocalMoveX(0, moveTime).SetEase(Ease.OutCirc);
         yield return moveSequence.WaitForCompletion();
         nextStateButton.interactable = true;
     }
 
     public IEnumerator DisappearStateUI()
     {
-        moveSequence = rectTransform.DOLocalMoveX(endPosition.localPosition.x, moveTime);
+        moveSequence = rectTransform.DOLocalMoveX(endPosition.localPosition.x, moveTime).SetEase(Ease.OutCirc);
         yield return moveSequence.WaitForCompletion();
         ResetStateUIPosition();
     }

@@ -16,7 +16,9 @@ public class StrategyUIPresenter : MonoBehaviour
 	[SerializeField] private RectTransform lowerArea;
     [SerializeField] private RectTransform visiblePosition;
     [SerializeField] private RectTransform invisiblePosition;
-    [SerializeField] private float moveTime = 0.4f;
+    [SerializeField] private float moveTime = 0.3f;
+	[SerializeField] private Ease appearEase;
+	[SerializeField] private Ease hideEase;
 
 	void Start()
 	{
@@ -26,13 +28,13 @@ public class StrategyUIPresenter : MonoBehaviour
 
 	public IEnumerator AppearLowerArea()
 	{
-		moveSequence = lowerArea.DOLocalMoveY(visiblePosition.localPosition.y, moveTime);
+		moveSequence = lowerArea.DOLocalMoveY(visiblePosition.localPosition.y, moveTime).SetEase(appearEase);
 		yield return moveSequence.WaitForCompletion();
 	}
 
 	public IEnumerator HideLowerArea()
 	{
-		moveSequence = lowerArea.DOLocalMoveY(invisiblePosition.localPosition.y, moveTime);
+		moveSequence = lowerArea.DOLocalMoveY(invisiblePosition.localPosition.y, moveTime).SetEase(hideEase);
         yield return moveSequence.WaitForCompletion();
 	}
 

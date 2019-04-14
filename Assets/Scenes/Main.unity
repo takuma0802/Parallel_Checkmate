@@ -2728,6 +2728,7 @@ MonoBehaviour:
   visiblePosition: {fileID: 690382229}
   invisiblePosition: {fileID: 1755959703}
   moveTime: 0.6
+  moveEase: 24
 --- !u!1 &1391738808
 GameObject:
   m_ObjectHideFlags: 0
