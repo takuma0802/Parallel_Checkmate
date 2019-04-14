@@ -50,19 +50,19 @@ public class PlayerManager : MonoBehaviour
 
     /// その他
     [Header("Other")]
-    [SerializeField] private GameObject StrategyUI;
+    [SerializeField] private StrategyUIPresenter StrategyUI;
+    //[SerializeField] private GameObject StrategyUI;
     [SerializeField] private GameObject attackEffectPrefab;
     [SerializeField] private Button turnEndButton;
     [SerializeField] private Button UndoButton;
-    private CompositeDisposable _compositeDisposable = new CompositeDisposable(); // 置くことが出来るCellの監視リスト    
-    //private bool canAction;
+    private CompositeDisposable _compositeDisposable = new CompositeDisposable(); // 置くことが出来るCellの監視リスト
 
     // メインシーンが始まった際の初期化処理
     public IEnumerator InitializePlayer(BoardManager boardManager)
     {
         this.boardManager = boardManager;
 
-        SetActiveUI(StrategyUI, false);
+        yield return StrategyUI.HideLowerArea();
         CreateAllPieces(PlayerType.Player1);
         CreateAllPieces(PlayerType.Player2);
         PutKings();
@@ -181,7 +181,7 @@ public class PlayerManager : MonoBehaviour
         Kings = new PieceProvider[2];
         Kings[0] = ObjectCreator.CreateInObject(PlayerGameObject[0], piecePrefabs[10]).GetComponent<PieceProvider>();
         Kings[1] = ObjectCreator.CreateInObject(PlayerGameObject[1], piecePrefabs[11]).GetComponent<PieceProvider>();
-        
+
         StartCoroutine(MovePieceUI(Kings[0].gameObject, 0, 1, false));
         Kings[0].SetPieceUIInfo(PlayerType.Player1, -1, PieceType.King);
 
@@ -192,7 +192,18 @@ public class PlayerManager : MonoBehaviour
 
     private void SetActiveUI(GameObject obj, bool enabled)
     {
-        obj.SetActive(enabled);
+        if (enabled)
+        {
+            obj.transform.localScale = new Vector3(0, 0, 0);
+            obj.SetActive(enabled);
+            obj.transform.DOScale(1f, 0.3f);
+        }
+        else
+        {
+            obj.transform.localScale = new Vector3(1, 1, 1);
+            obj.transform.DOScale(0f, 0.3f);
+            obj.SetActive(enabled);
+        }
     }
 
     public IEnumerator StartStrategy(GameState player)
@@ -206,14 +217,15 @@ public class PlayerManager : MonoBehaviour
             this.player = PlayerType.Player2;
         }
         Reset();
+        yield return StrategyUI.AppearLowerArea();
+
         StartObserve();
-        yield return null;
 
         // 決定ボタンが押される
         yield return turnEndButton.OnClickAsObservable().First().ToYieldInstruction();
 
+        yield return StrategyUI.HideLowerArea();
         DisposeAllStream();
-        SetActiveUI(StrategyUI, false);
         UndoAllActions();
         Reset();
         yield return null;
@@ -231,7 +243,6 @@ public class PlayerManager : MonoBehaviour
             SetHoldingPieceUI(Pieces2);
             ObserveAvailablePieces(Pieces2, PiecesObject2);
         }
-        SetActiveUI(StrategyUI, true);
     }
 
     private void Reset()
@@ -257,38 +268,10 @@ public class PlayerManager : MonoBehaviour
     }
 
     ////////  盤上のPiece配置周り
-    // // 指定されたPiecesの中で盤上に置かれているPieceを取得
-    // private void SearchPuttedPieces(PieceBase[] pieces) // のちのち消したい
-    // {
-    //     foreach (PieceBase piece in pieces)
-    //     {
-    //         if (!piece.IsPutted) return;
-    //         if (piece.IsDestroyed) return;
-    //         if (puttedPieces.Contains(piece)) return;
-    //         puttedPieces.Add(piece);
-    //     }
-    // }
-
-    // private void SetPuttedPieces() // のちのち消したい
-    // {
-    //     foreach (PieceBase piece in puttedPieces)
-    //     {
-    //         if (piece.Player == PlayerType.Player1)
-    //         {
-    //             StartCoroutine(MovePieceUI(PiecesObject1[piece.PieceNum].gameObject, piece.Column, piece.Row, true));
-    //         }
-    //         else if (piece.Player == PlayerType.Player2)
-    //         {
-    //             StartCoroutine(MovePieceUI(PiecesObject2[piece.PieceNum].gameObject, piece.Column, piece.Row, true));
-    //         }
-    //     }
-    // }
-
     private IEnumerator MovePieceUI(GameObject target, int column, int row, bool isAnimation)
     {
         if (isAnimation)
         {
-            //SetActiveUI(target, true);
             var targetPos = boardManager.ReturnCellLocalPosition(column, row);
             var moveSequence = target.transform.DOLocalMove(targetPos, 0.5f);
             yield return moveSequence.WaitForCompletion();
