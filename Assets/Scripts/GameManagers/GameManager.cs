@@ -78,8 +78,10 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator InitializeCoroutine()
     {
-        yield return boardManager.CreateBoard();
+        boardManager.CreateBoard();
+        yield return null;
         yield return playerManager.InitializePlayer(boardManager);
+        yield return null;
         CurrentState.Value = GameState.Ready;
     }
 

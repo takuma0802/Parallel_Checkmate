@@ -21,9 +21,6 @@ public class GameStateUI : MonoBehaviour
     [SerializeField] private Button nextStateButton;
     public Button NextStateButton { get { return nextStateButton; } }
 
-    
-    
-
     public void Initialize(GameStateReactiveProperty gameState)
     {
         rectTransform = GetComponent<RectTransform>();

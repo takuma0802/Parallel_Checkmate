@@ -1947,7 +1947,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1048694238}
   - component: {fileID: 1048694237}
-  - component: {fileID: 1048694240}
   - component: {fileID: 1048694239}
   m_Layer: 0
   m_Name: GameManager
@@ -2079,17 +2078,6 @@ MonoBehaviour:
     type: 2}
   turnEndButton: {fileID: 1738444033}
   UndoButton: {fileID: 1954022074}
---- !u!114 &1048694240
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1048694236}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: eb823c73040954f0fab5dc9980b16380, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1049239656
 GameObject:
   m_ObjectHideFlags: 0

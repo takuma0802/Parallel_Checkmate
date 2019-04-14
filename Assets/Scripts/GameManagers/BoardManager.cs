@@ -25,13 +25,11 @@ public class BoardManager : MonoBehaviour
     private PlayerAction playerAction;
     private List<CellHandler> puttedCellList = new List<CellHandler>();
 
-    public IEnumerator CreateBoard()
+    public void CreateBoard()
     {
         ResetBoard();
-        // 初期化
         ObjectCreator.CreateInObject(this.gameObject, backGround);
         cells = new CellHandler[columnSize, rowSize];
-
         GetComponent<GridLayoutGroup>().cellSize = new Vector2(cellSize, cellSize);
         GetComponent<GridLayoutGroup>().constraintCount = columnSize;
 
@@ -39,10 +37,9 @@ public class BoardManager : MonoBehaviour
         {
             for (int column = 0; column < columnSize; column++)
             {
-                StartCoroutine(CreateCell(column, row));
+                CreateCell(column, row);
             }
         }
-        yield return null;
     }
 
     public void ResetBoard()
@@ -50,18 +47,15 @@ public class BoardManager : MonoBehaviour
         previousCells.Clear();
         observedCells.Clear();
         
-
         if (transform.childCount == 0) return;
         ObjectCreator.DestroyAllChild(this.gameObject);
     }
 
-    private IEnumerator CreateCell(int column, int row)
+    private void CreateCell(int column, int row)
     {
         CellHandler cell = ObjectCreator.CreateInObject(this.gameObject, cellPrefab).GetComponent<CellHandler>();
-        yield return cell.SetCell(column, row, CellType.Default);
+        cell.SetCell(column, row, CellType.Default);
         cells[column, row] = cell;
-
-        yield return null;
     }
 
     public void PutKings()

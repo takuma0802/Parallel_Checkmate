@@ -10,7 +10,6 @@ using DG.Tweening;
 public class PlayerManager : MonoBehaviour
 {
     /// Manager
-    private TimeManager timeManager;
     private BoardManager boardManager;
 
     /// Player
@@ -62,20 +61,17 @@ public class PlayerManager : MonoBehaviour
     public IEnumerator InitializePlayer(BoardManager boardManager)
     {
         this.boardManager = boardManager;
-        timeManager = GetComponent<TimeManager>();
-        if (!timeManager) gameObject.AddComponent<TimeManager>();
-        //canAction = false;
 
         SetActiveUI(StrategyUI, false);
-
-        yield return CreateHoldingPiece(PlayerType.Player1);
-        yield return CreateHoldingPiece(PlayerType.Player2);
+        CreateAllPieces(PlayerType.Player1);
+        CreateAllPieces(PlayerType.Player2);
         PutKings();
+        yield return new WaitForEndOfFrame();
 
         foreach (PieceProvider piece in PiecesObject1) SetActiveUI(piece.gameObject, false);
         foreach (PieceProvider piece in PiecesObject2) SetActiveUI(piece.gameObject, false);
-
         ObserveStreams();
+        yield return new WaitForEndOfFrame();
     }
 
     private void ObserveStreams()
@@ -89,16 +85,6 @@ public class PlayerManager : MonoBehaviour
             if (x.Action == PieceAction.Move)
             {
                 StartCoroutine(ExecuteMovePiece(x));
-                // if (x.Player == PlayerType.Player1)
-                // {
-                //     PutPieceUI(PiecesObject1[x.Piece.PieceNum].gameObject, x.NextColumn, x.NextRow);
-                //     SetPieceInfo(x.Piece, x.NextColumn, x.NextRow, true, false);
-                // }
-                // else if (x.Player == PlayerType.Player2)
-                // {
-                //     PutPieceUI(PiecesObject2[x.Piece.PieceNum].gameObject, x.NextColumn, x.NextRow);
-                //     SetPieceInfo(x.Piece, x.NextColumn, x.NextRow, true, false);
-                // s}
             }
             else if (x.Action == PieceAction.Attack)
             {
@@ -124,7 +110,7 @@ public class PlayerManager : MonoBehaviour
         });
     }
 
-    private IEnumerator CreateHoldingPiece(PlayerType player)
+    private void CreateAllPieces(PlayerType player)
     {
         if (player == PlayerType.Player1)
         {
@@ -188,7 +174,6 @@ public class PlayerManager : MonoBehaviour
             PiecesObject2[14] = ObjectCreator.CreateInObject(PlayerGameObject[1], piecePrefabs[9]).GetComponent<PieceProvider>();
             PiecesObject2[14].SetPieceUIInfo(player, 14, PieceType.Piece5);
         }
-        yield return null;
     }
 
     private void PutKings()
@@ -196,7 +181,7 @@ public class PlayerManager : MonoBehaviour
         Kings = new PieceProvider[2];
         Kings[0] = ObjectCreator.CreateInObject(PlayerGameObject[0], piecePrefabs[10]).GetComponent<PieceProvider>();
         Kings[1] = ObjectCreator.CreateInObject(PlayerGameObject[1], piecePrefabs[11]).GetComponent<PieceProvider>();
-        //StartCoroutine
+        
         StartCoroutine(MovePieceUI(Kings[0].gameObject, 0, 1, false));
         Kings[0].SetPieceUIInfo(PlayerType.Player1, -1, PieceType.King);
 
@@ -220,16 +205,18 @@ public class PlayerManager : MonoBehaviour
         {
             this.player = PlayerType.Player2;
         }
-        yield return Reset();
+        Reset();
         StartObserve();
+        yield return null;
 
         // 決定ボタンが押される
         yield return turnEndButton.OnClickAsObservable().First().ToYieldInstruction();
 
         DisposeAllStream();
         SetActiveUI(StrategyUI, false);
-        yield return UndoAllActions();
-        yield return Reset();
+        UndoAllActions();
+        Reset();
+        yield return null;
     }
 
     private void StartObserve()
@@ -245,25 +232,16 @@ public class PlayerManager : MonoBehaviour
             ObserveAvailablePieces(Pieces2, PiecesObject2);
         }
         SetActiveUI(StrategyUI, true);
-        //canAction = true;
     }
 
-    private IEnumerator Reset()
+    private void Reset()
     {
-        // のちのち消したい
-        // 現在の置かれているPieceを更新
-        // SearchPuttedPieces(Pieces1);
-        // SearchPuttedPieces(Pieces2);
-        //SetPuttedPieces();
-
+        ResetCost();
         for (var i = 0; i < PiecesObject1.Length; i++)
         {
             PiecesObject1[i].ChangeAttackIcon(false);
             PiecesObject2[i].ChangeAttackIcon(false);
         }
-
-        yield return new WaitForEndOfFrame();
-        ResetCost();
     }
 
     private void ResetCost()
@@ -279,32 +257,32 @@ public class PlayerManager : MonoBehaviour
     }
 
     ////////  盤上のPiece配置周り
-    // 指定されたPiecesの中で盤上に置かれているPieceを取得
-    private void SearchPuttedPieces(PieceBase[] pieces) // のちのち消したい
-    {
-        foreach (PieceBase piece in pieces)
-        {
-            if (!piece.IsPutted) return;
-            if (piece.IsDestroyed) return;
-            if (puttedPieces.Contains(piece)) return;
-            puttedPieces.Add(piece);
-        }
-    }
+    // // 指定されたPiecesの中で盤上に置かれているPieceを取得
+    // private void SearchPuttedPieces(PieceBase[] pieces) // のちのち消したい
+    // {
+    //     foreach (PieceBase piece in pieces)
+    //     {
+    //         if (!piece.IsPutted) return;
+    //         if (piece.IsDestroyed) return;
+    //         if (puttedPieces.Contains(piece)) return;
+    //         puttedPieces.Add(piece);
+    //     }
+    // }
 
-    private void SetPuttedPieces() // のちのち消したい
-    {
-        foreach (PieceBase piece in puttedPieces)
-        {
-            if (piece.Player == PlayerType.Player1)
-            {
-                StartCoroutine(MovePieceUI(PiecesObject1[piece.PieceNum].gameObject, piece.Column, piece.Row, true));
-            }
-            else if (piece.Player == PlayerType.Player2)
-            {
-                StartCoroutine(MovePieceUI(PiecesObject2[piece.PieceNum].gameObject, piece.Column, piece.Row, true));
-            }
-        }
-    }
+    // private void SetPuttedPieces() // のちのち消したい
+    // {
+    //     foreach (PieceBase piece in puttedPieces)
+    //     {
+    //         if (piece.Player == PlayerType.Player1)
+    //         {
+    //             StartCoroutine(MovePieceUI(PiecesObject1[piece.PieceNum].gameObject, piece.Column, piece.Row, true));
+    //         }
+    //         else if (piece.Player == PlayerType.Player2)
+    //         {
+    //             StartCoroutine(MovePieceUI(PiecesObject2[piece.PieceNum].gameObject, piece.Column, piece.Row, true));
+    //         }
+    //     }
+    // }
 
     private IEnumerator MovePieceUI(GameObject target, int column, int row, bool isAnimation)
     {
@@ -463,15 +441,14 @@ public class PlayerManager : MonoBehaviour
         _compositeDisposable.Clear();
     }
 
-    private IEnumerator UndoAllActions()
+    private void UndoAllActions()
     {
-        if (playerActions.Count == 0) yield break;
+        if (playerActions.Count == 0) return;
         var reverseAction = playerActions.AsEnumerable().Reverse();
         foreach (PlayerAction action in reverseAction)
         {
             UndoPlayerAction(action);
         }
-        yield return new WaitForEndOfFrame();
     }
 
     private void OnClickUndoButton()

@@ -40,14 +40,13 @@ public class CellHandler : MonoBehaviour
         get { return column; }
     }
 
-    public IEnumerator SetCell(int column, int row, CellType cellType)
+    public void SetCell(int column, int row, CellType cellType)
     {
         this.column = column;
         this.row = row;
         this.gameObject.name = row.ToString() + "-" + column.ToString();
         this.cellType = cellType;
         ChangeButtonInteractable(false);
-        yield return null;
     }
 
     public void ChangeButtonInteractable(bool enable)
