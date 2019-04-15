@@ -34,6 +34,7 @@ public class PlayerManager : MonoBehaviour
 
     private List<PieceBase> puttedPieces = new List<PieceBase>(); // 盤上に置かれているPiece情報
     private List<PieceBase> destroyObjects = new List<PieceBase>(); // そのターンで破壊されるPiece情報
+    private List<Tuple<int, int>> attackPointList = new List<Tuple<int, int>>(); // そのコマが攻撃することが出来るマスのリスト
 
     /// 手札
     [Header("手札")]
@@ -51,22 +52,24 @@ public class PlayerManager : MonoBehaviour
     /// その他
     [Header("Other")]
     [SerializeField] private StrategyUIPresenter StrategyUI;
-    [SerializeField] private GameObject attackEffectPrefab;
-    // [SerializeField] private Button turnEndButton;
-    // [SerializeField] private Button UndoButton;
+    private ObjectPool objectPool; // 後々,外から渡す
+    [SerializeField] private GameObject attackEffectPrefab; // 後々別クラスへ
+
     private CompositeDisposable _compositeDisposable = new CompositeDisposable(); // 置くことが出来るCellの監視リスト
 
     // メインシーンが始まった際の初期化処理
     public IEnumerator InitializePlayer(BoardManager boardManager)
     {
         this.boardManager = boardManager;
+        this.objectPool = GetComponent<ObjectPool>(); // 後々別クラスへ
+        objectPool.CreatePool(attackEffectPrefab, PlayerGameObject[2], 6); // 後々別クラスへ
 
         yield return StrategyUI.HideLowerArea();
         CreateAllPieces();
         yield return new WaitForEndOfFrame();
 
-        foreach (PieceProvider piece in PiecesObject1) SetActiveUI(piece.gameObject, false);
-        foreach (PieceProvider piece in PiecesObject2) SetActiveUI(piece.gameObject, false);
+        foreach (PieceProvider piece in PiecesObject1) SetActivePieceUI(piece.gameObject, false);
+        foreach (PieceProvider piece in PiecesObject2) SetActivePieceUI(piece.gameObject, false);
         ObserveStreams();
         yield return new WaitForEndOfFrame();
     }
@@ -109,7 +112,7 @@ public class PlayerManager : MonoBehaviour
 
     private void CreateAllPieces()
     {
-        var player = PlayerType.Player1; 
+        var player = PlayerType.Player1;
         Pieces1 = new PieceBase[15];
         for (int i = 0; i < 5; i++)
         {
@@ -139,7 +142,7 @@ public class PlayerManager : MonoBehaviour
         PiecesObject1[14] = ObjectCreator.CreateInObject(PlayerGameObject[0], piecePrefabs[4]).GetComponent<PieceProvider>();
         PiecesObject1[14].SetPieceUIInfo(player, 14, PieceType.Piece5);
 
-        player = PlayerType.Player2; 
+        player = PlayerType.Player2;
         Pieces2 = new PieceBase[15];
         for (int i = 0; i < 5; i++)
         {
@@ -181,23 +184,23 @@ public class PlayerManager : MonoBehaviour
         Kings[1] = ObjectCreator.CreateInObject(PlayerGameObject[1], piecePrefabs[11]).GetComponent<PieceProvider>();
         Kings[1].SetPieceUIInfo(PlayerType.Player2, -1, PieceType.King);
         StartCoroutine(MovePieceUI(Kings[1].gameObject, 7, 1, false));
-        
+
         boardManager.PutKings();
     }
 
-    private void SetActiveUI(GameObject obj, bool enabled)
+    private void SetActivePieceUI(GameObject pieceObj, bool enabled)
     {
         if (enabled)
         {
-            obj.transform.localScale = new Vector3(0, 0, 0);
-            obj.SetActive(enabled);
-            obj.transform.DOScale(1f, 0.3f).SetEase(Ease.InQuad);
+            pieceObj.transform.localScale = new Vector3(0, 0, 0);
+            pieceObj.SetActive(enabled);
+            pieceObj.transform.DOScale(1f, 0.3f).SetEase(Ease.InQuad);
         }
         else
         {
-            obj.transform.localScale = new Vector3(1, 1, 1);
-            obj.transform.DOScale(0f, 0.3f).SetEase(Ease.OutQuint);
-            obj.SetActive(enabled);
+            pieceObj.transform.localScale = new Vector3(1, 1, 1);
+            pieceObj.transform.DOScale(0f, 0.3f).SetEase(Ease.OutQuint);
+            pieceObj.SetActive(enabled);
         }
     }
 
@@ -218,7 +221,7 @@ public class PlayerManager : MonoBehaviour
 
         // 決定ボタンが押される
         yield return StrategyUI.TurnEndButton.OnClickAsObservable().First().ToYieldInstruction();
-        
+
         DisposeAllStream();
         UndoAllActions();
         Reset();
@@ -274,7 +277,7 @@ public class PlayerManager : MonoBehaviour
         else
         {
             target.transform.localPosition = boardManager.ReturnCellLocalPosition(column, row);
-            SetActiveUI(target, true);
+            SetActivePieceUI(target, true);
         }
         Sound.LoadSe("9", "9_komaidou");
         Sound.PlaySe("9");
@@ -457,7 +460,7 @@ public class PlayerManager : MonoBehaviour
             {
                 if (!pAction.OnBoard)
                 {
-                    SetActiveUI(PiecesObject1[pAction.Piece.PieceNum].gameObject, false);
+                    SetActivePieceUI(PiecesObject1[pAction.Piece.PieceNum].gameObject, false);
                     SetPieceInfo(pAction.Piece, 0, 0, false, false);
                 }
                 else
@@ -470,7 +473,7 @@ public class PlayerManager : MonoBehaviour
             {
                 if (!pAction.OnBoard)
                 {
-                    SetActiveUI(PiecesObject2[pAction.Piece.PieceNum].gameObject, false);
+                    SetActivePieceUI(PiecesObject2[pAction.Piece.PieceNum].gameObject, false);
                     SetPieceInfo(pAction.Piece, 0, 0, false, false);
                 }
                 else
@@ -498,7 +501,7 @@ public class PlayerManager : MonoBehaviour
 
         foreach (PlayerAction pAction in playerActions)
         {
-            if (pAction.Action == PieceAction.Attack) yield break;
+            if (pAction.Action == PieceAction.Attack) continue;
             yield return ExecuteMovePiece(pAction);
             yield return new WaitForSeconds(0.5f);
         }
@@ -561,11 +564,11 @@ public class PlayerManager : MonoBehaviour
         SetPieceInfo(piece, -1, -1, false, true);
         if (piece.Player == PlayerType.Player1)
         {
-            SetActiveUI(PiecesObject1[piece.PieceNum].gameObject, false);
+            SetActivePieceUI(PiecesObject1[piece.PieceNum].gameObject, false);
         }
         else if (piece.Player == PlayerType.Player2)
         {
-            SetActiveUI(PiecesObject2[piece.PieceNum].gameObject, false);
+            SetActivePieceUI(PiecesObject2[piece.PieceNum].gameObject, false);
         }
         Sound.LoadSe("14", "14_stop");
         Sound.PlaySe("14");
@@ -580,10 +583,14 @@ public class PlayerManager : MonoBehaviour
             if (x.Action == PieceAction.Move) continue;
             if (x.Piece.IsDestroyed) continue;
 
+            attackPointList.Clear();
             SearchAttackAvailablePoint(x);
-            yield return new WaitForSeconds(0.3f);
+
+            //yield return PieceAttack(x.Player);
+
+            //yield return new WaitForSeconds(0.6f);
         }
-        yield return new WaitForSeconds(0.3f);
+        yield return new WaitForSeconds(0.5f);
     }
 
     public void SearchAttackAvailablePoint(PlayerAction playerAction)
@@ -618,93 +625,117 @@ public class PlayerManager : MonoBehaviour
         return boardManager.CanAttack(column, row);
     }
 
-    private void PieceAttack(int column, int row, PlayerType player)
+    //    int column, int row, 
+    private IEnumerator PieceAttack(int column, int row,PlayerType player)
     {
-        //UI表示
-        //boardManager.AttackAnimation(column, row);
-        //PutPieceUI(attackEffectPrefab, column, row);
+        // foreach (var cell in attackPointList)
+        // {
+        //     (int x,int y) value;
+        //     var columm = cell[0];
+            if (CanAttack(column, row)) yield break;
 
-        // このCellに敵がいるかチェックして追加
-        var cellNum = row * 8 + column;
+            var hitEffect = objectPool.GetObject().GetComponent<HitEffect>();
+            hitEffect.ChangePosition(boardManager.ReturnCellLocalPosition(column, row));
+            yield return hitEffect.HitEffectAnimation();
 
-        if (player == PlayerType.Player1)
-        {
-            var pieces = Pieces2.Where(i => i.IsPutted && !i.IsDestroyed).ToArray();
-            foreach (var piece in pieces)
+            // このCellに敵がいるかチェックして追加
+            var cellNum = row * 8 + column;
+
+            if (player == PlayerType.Player1)
             {
-                var pieceNum = piece.Row * 8 + piece.Column;
-                if (pieceNum == cellNum) destroyObjects.Add(piece);
+                var pieces = Pieces2.Where(i => i.IsPutted && !i.IsDestroyed).ToArray();
+                foreach (var piece in pieces)
+                {
+                    var pieceNum = piece.Row * 8 + piece.Column;
+                    if (pieceNum == cellNum) destroyObjects.Add(piece);
+                }
+                if (cellNum == 15)
+                {
+                    player1win = true;
+                }
             }
-            if (cellNum == 15)
+            else if (player == PlayerType.Player2)
             {
-                player1win = true;
+                var pieces = Pieces1.Where(i => i.IsPutted && !i.IsDestroyed).ToArray();
+                foreach (var piece in pieces)
+                {
+                    var pieceNum = piece.Row * 8 + piece.Column;
+                    if (pieceNum == cellNum) destroyObjects.Add(piece);
+                }
+                if (cellNum == 8)
+                {
+                    player2win = true;
+                }
             }
-        }
-        else if (player == PlayerType.Player2)
-        {
-            var pieces = Pieces1.Where(i => i.IsPutted && !i.IsDestroyed).ToArray();
-            foreach (var piece in pieces)
-            {
-                var pieceNum = piece.Row * 8 + piece.Column;
-                if (pieceNum == cellNum) destroyObjects.Add(piece);
-            }
-            if (cellNum == 8)
-            {
-                player2win = true;
-            }
-        }
+        //}
     }
 
     private void CheckAttackPointOfPiece1(int column, int row, PlayerType player)
     {
         if (player == PlayerType.Player1)
         {
-            if (CanAttack(column + 1, row)) PieceAttack(column + 1, row, player);
+            //if (CanAttack(column + 1, row)) PieceAttack(column + 1, row, player);
+            attackPointList.Add(Tuple.Create(column + 1, row));
         }
         else if (player == PlayerType.Player2)
         {
-            if (CanAttack(column - 1, row)) PieceAttack(column - 1, row, player);
+            //if (CanAttack(column - 1, row)) PieceAttack(column - 1, row, player);
+            attackPointList.Add(Tuple.Create(column - 1, row));
         }
     }
 
     private void CheckAttackPointOfPiece2(int column, int row, PlayerType player)
     {
-        if (CanAttack(column + 1, row)) PieceAttack(column + 1, row, player);
-        if (CanAttack(column - 1, row)) PieceAttack(column - 1, row, player);
-        if (CanAttack(column, row + 1)) PieceAttack(column, row + 1, player);
-        if (CanAttack(column, row - 1)) PieceAttack(column, row - 1, player);
+        attackPointList.Add(Tuple.Create(column + 1, row));
+        attackPointList.Add(Tuple.Create(column - 1, row));
+        attackPointList.Add(Tuple.Create(column, row + 1));
+        attackPointList.Add(Tuple.Create(column, row - 1));
+        // if (CanAttack(column + 1, row)) PieceAttack(column + 1, row, player);
+        // if (CanAttack(column - 1, row)) PieceAttack(column - 1, row, player);
+        // if (CanAttack(column, row + 1)) PieceAttack(column, row + 1, player);
+        // if (CanAttack(column, row - 1)) PieceAttack(column, row - 1, player);
     }
 
     private void CheckAttackPointOfPiece3(int column, int row, PlayerType player)
     {
-        if (CanAttack(column + 2, row - 1)) PieceAttack(column + 2, row - 1, player);
-        if (CanAttack(column + 2, row + 1)) PieceAttack(column + 2, row + 1, player);
-        if (CanAttack(column - 2, row - 1)) PieceAttack(column - 2, row - 1, player);
-        if (CanAttack(column - 2, row + 1)) PieceAttack(column - 2, row + 1, player);
-        if (CanAttack(column + 1, row + 2)) PieceAttack(column + 1, row + 2, player);
-        if (CanAttack(column - 1, row + 2)) PieceAttack(column - 1, row + 2, player);
-        if (CanAttack(column + 1, row - 2)) PieceAttack(column + 1, row - 2, player);
-        if (CanAttack(column - 1, row - 2)) PieceAttack(column - 1, row - 2, player);
+        attackPointList.Add(Tuple.Create(column + 2, row - 1));
+        attackPointList.Add(Tuple.Create(column + 2, row + 1));
+        attackPointList.Add(Tuple.Create(column - 2, row - 1));
+        attackPointList.Add(Tuple.Create(column - 2, row + 1));
+        attackPointList.Add(Tuple.Create(column + 1, row + 2));
+        attackPointList.Add(Tuple.Create(column - 1, row + 2));
+        attackPointList.Add(Tuple.Create(column + 1, row - 2));
+        attackPointList.Add(Tuple.Create(column - 1, row - 2));
+
+        // if (CanAttack(column + 2, row - 1)) PieceAttack(column + 2, row - 1, player);
+        // if (CanAttack(column + 2, row + 1)) PieceAttack(column + 2, row + 1, player);
+        // if (CanAttack(column - 2, row - 1)) PieceAttack(column - 2, row - 1, player);
+        // if (CanAttack(column - 2, row + 1)) PieceAttack(column - 2, row + 1, player);
+        // if (CanAttack(column + 1, row + 2)) PieceAttack(column + 1, row + 2, player);
+        // if (CanAttack(column - 1, row + 2)) PieceAttack(column - 1, row + 2, player);
+        // if (CanAttack(column + 1, row - 2)) PieceAttack(column + 1, row - 2, player);
+        // if (CanAttack(column - 1, row - 2)) PieceAttack(column - 1, row - 2, player);
     }
 
     private void CheckAttackPointOfPiece4(int column, int row, PlayerType player)
     {
-        if (CanAttack(column + 1, row + 1)) PieceAttack(column + 1, row + 1, player);
-        if (CanAttack(column + 1, row - 1)) PieceAttack(column + 1, row - 1, player);
-        if (CanAttack(column - 1, row + 1)) PieceAttack(column - 1, row + 1, player);
-        if (CanAttack(column - 1, row - 1)) PieceAttack(column - 1, row - 1, player);
+        //attackPointList.Add(Tuple.Create());
+        // if (CanAttack(column + 1, row + 1)) PieceAttack(column + 1, row + 1, player);
+        // if (CanAttack(column + 1, row - 1)) PieceAttack(column + 1, row - 1, player);
+        // if (CanAttack(column - 1, row + 1)) PieceAttack(column - 1, row + 1, player);
+        // if (CanAttack(column - 1, row - 1)) PieceAttack(column - 1, row - 1, player);
     }
 
     private void CheckAttackPointOfPiece5(int column, int row, PlayerType player)
     {
-        if (CanAttack(column + 1, row + 1)) PieceAttack(column + 1, row + 1, player);
-        if (CanAttack(column + 1, row - 1)) PieceAttack(column + 1, row - 1, player);
-        if (CanAttack(column + 1, row)) PieceAttack(column + 1, row, player);
-        if (CanAttack(column - 1, row + 1)) PieceAttack(column - 1, row + 1, player);
-        if (CanAttack(column - 1, row - 1)) PieceAttack(column - 1, row - 1, player);
-        if (CanAttack(column - 1, row)) PieceAttack(column - 1, row, player);
-        if (CanAttack(column, row + 1)) PieceAttack(column, row + 1, player);
-        if (CanAttack(column, row - 1)) PieceAttack(column, row - 1, player);
+        // if (CanAttack(column + 1, row + 1)) PieceAttack(column + 1, row + 1, player);
+        // if (CanAttack(column + 1, row - 1)) PieceAttack(column + 1, row - 1, player);
+        // if (CanAttack(column + 1, row)) PieceAttack(column + 1, row, player);
+        // if (CanAttack(column - 1, row + 1)) PieceAttack(column - 1, row + 1, player);
+        // if (CanAttack(column - 1, row - 1)) PieceAttack(column - 1, row - 1, player);
+        // if (CanAttack(column - 1, row)) PieceAttack(column - 1, row, player);
+        // if (CanAttack(column, row + 1)) PieceAttack(column, row + 1, player);
+        // if (CanAttack(column, row - 1)) PieceAttack(column, row - 1, player);
     }
 
     public IEnumerator ExcecuteAttackDestroy()

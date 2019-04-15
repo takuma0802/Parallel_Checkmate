@@ -244,9 +244,4 @@ public class BoardManager : MonoBehaviour
         }
         return puttedCellList;
     }
-
-    public void AttackAnimation(int column,int row)
-    {
-        cells[column,row].AttackAnimation();
-    }
 }

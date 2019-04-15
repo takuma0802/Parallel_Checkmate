@@ -66,13 +66,6 @@ public class CellHandler : MonoBehaviour
         puttedCell.SetActive(false);
     }
 
-    public void AttackAnimation()
-    {
-        //attackCell.SetActive(true);
-        Sound.LoadSe("10","10_komakougeki");
-        Sound.PlaySe("10");
-    }
-
     public void SetKing()
     {
         cellType = CellType.King;
