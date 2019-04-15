@@ -2081,39 +2081,6 @@ MonoBehaviour:
   PlayerGameObject:
   - {fileID: 1654596867}
   - {fileID: 765613756}
-  Kings: []
-  PiecesObject1:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  PiecesObject2:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
   holdingPieceButtons:
   - {fileID: 2031249449}
   - {fileID: 1132496161}
@@ -2145,8 +2112,6 @@ MonoBehaviour:
   StrategyUI: {fileID: 1370281666}
   attackEffectPrefab: {fileID: 1975746361705700, guid: 9b37396e9f4bed1409d4d8aa01166868,
     type: 2}
-  turnEndButton: {fileID: 1738444033}
-  UndoButton: {fileID: 1954022074}
 --- !u!1 &1049239656
 GameObject:
   m_ObjectHideFlags: 0
@@ -2722,8 +2687,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1fc4abc77681b429099b7abc924f40f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  turnEndButton: {fileID: 1738444033}
-  undoButton: {fileID: 1954022074}
+  TurnEndButton: {fileID: 1738444033}
+  UndoButton: {fileID: 1954022074}
   lowerArea: {fileID: 829281623}
   visiblePosition: {fileID: 690382229}
   invisiblePosition: {fileID: 1755959703}
@@ -3576,7 +3541,7 @@ GameObject:
   - component: {fileID: 1738444034}
   - component: {fileID: 1738444033}
   m_Layer: 5
-  m_Name: turnEndButton
+  m_Name: TurnEndButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

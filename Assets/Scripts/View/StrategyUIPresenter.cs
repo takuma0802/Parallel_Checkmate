@@ -7,11 +7,10 @@ using DG.Tweening;
 
 public class StrategyUIPresenter : MonoBehaviour
 {
-    public Button turnEndButton;
-    public Button undoButton;
+    public Button TurnEndButton;
+    public Button UndoButton;
 
 	// 移動アニメーション周り
-	private RectTransform rectTransform;
 	private Tweener moveSequence = null;
 	[SerializeField] private RectTransform lowerArea;
     [SerializeField] private RectTransform visiblePosition;
@@ -22,7 +21,6 @@ public class StrategyUIPresenter : MonoBehaviour
 
 	void Start()
 	{
-		rectTransform = GetComponent<RectTransform>();
 		ResetPosition();
 	}
 

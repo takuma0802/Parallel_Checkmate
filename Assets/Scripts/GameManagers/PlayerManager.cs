@@ -26,11 +26,11 @@ public class PlayerManager : MonoBehaviour
 
     // 各Plyerの保持しているPiece情報
     // 0~4:Piece1/ 5~8:Piece2/ 9~11:Piece3...
-    [HideInInspector] public PieceBase[] Pieces1;
-    [HideInInspector] public PieceBase[] Pieces2;
-    [HideInInspector] public PieceProvider[] Kings = new PieceProvider[2];
-    [HideInInspector] public PieceProvider[] PiecesObject1 = new PieceProvider[15];
-    [HideInInspector] public PieceProvider[] PiecesObject2 = new PieceProvider[15];
+    private PieceBase[] Pieces1;
+    private PieceBase[] Pieces2;
+    private PieceProvider[] Kings = new PieceProvider[2];
+    private PieceProvider[] PiecesObject1 = new PieceProvider[15];
+    private PieceProvider[] PiecesObject2 = new PieceProvider[15];
 
     private List<PieceBase> puttedPieces = new List<PieceBase>(); // 盤上に置かれているPiece情報
     private List<PieceBase> destroyObjects = new List<PieceBase>(); // そのターンで破壊されるPiece情報
@@ -51,10 +51,9 @@ public class PlayerManager : MonoBehaviour
     /// その他
     [Header("Other")]
     [SerializeField] private StrategyUIPresenter StrategyUI;
-    //[SerializeField] private GameObject StrategyUI;
     [SerializeField] private GameObject attackEffectPrefab;
-    [SerializeField] private Button turnEndButton;
-    [SerializeField] private Button UndoButton;
+    // [SerializeField] private Button turnEndButton;
+    // [SerializeField] private Button UndoButton;
     private CompositeDisposable _compositeDisposable = new CompositeDisposable(); // 置くことが出来るCellの監視リスト
 
     // メインシーンが始まった際の初期化処理
@@ -63,9 +62,7 @@ public class PlayerManager : MonoBehaviour
         this.boardManager = boardManager;
 
         yield return StrategyUI.HideLowerArea();
-        CreateAllPieces(PlayerType.Player1);
-        CreateAllPieces(PlayerType.Player2);
-        PutKings();
+        CreateAllPieces();
         yield return new WaitForEndOfFrame();
 
         foreach (PieceProvider piece in PiecesObject1) SetActiveUI(piece.gameObject, false);
@@ -102,7 +99,7 @@ public class PlayerManager : MonoBehaviour
             StartObserve();
         });
 
-        UndoButton.OnClickAsObservable().Subscribe(_ =>
+        StrategyUI.UndoButton.OnClickAsObservable().Subscribe(_ =>
         {
             DisposeAllStream();
             OnClickUndoButton();
@@ -110,83 +107,81 @@ public class PlayerManager : MonoBehaviour
         });
     }
 
-    private void CreateAllPieces(PlayerType player)
+    private void CreateAllPieces()
     {
-        if (player == PlayerType.Player1)
+        var player = PlayerType.Player1; 
+        Pieces1 = new PieceBase[15];
+        for (int i = 0; i < 5; i++)
         {
-            Pieces1 = new PieceBase[15];
-            for (int i = 0; i < 5; i++)
-            {
-                Pieces1[i] = new Piece1(player, i);
-                PiecesObject1[i] = ObjectCreator.CreateInObject(PlayerGameObject[0], piecePrefabs[0]).GetComponent<PieceProvider>();
-                PiecesObject1[i].SetPieceUIInfo(player, i, PieceType.Piece1);
-            }
-            for (int i = 5; i < 9; i++)
-            {
-                Pieces1[i] = new Piece2(player, i);
-                PiecesObject1[i] = ObjectCreator.CreateInObject(PlayerGameObject[0], piecePrefabs[1]).GetComponent<PieceProvider>();
-                PiecesObject1[i].SetPieceUIInfo(player, i, PieceType.Piece2);
-            }
-            for (int i = 9; i < 12; i++)
-            {
-                Pieces1[i] = new Piece3(player, i);
-                PiecesObject1[i] = ObjectCreator.CreateInObject(PlayerGameObject[0], piecePrefabs[2]).GetComponent<PieceProvider>();
-                PiecesObject1[i].SetPieceUIInfo(player, i, PieceType.Piece3);
-            }
-            for (int i = 12; i < 14; i++)
-            {
-                Pieces1[i] = new Piece4(player, i);
-                PiecesObject1[i] = ObjectCreator.CreateInObject(PlayerGameObject[0], piecePrefabs[3]).GetComponent<PieceProvider>();
-                PiecesObject1[i].SetPieceUIInfo(player, i, PieceType.Piece4);
-            }
-            Pieces1[14] = new Piece5(player, 14);
-            PiecesObject1[14] = ObjectCreator.CreateInObject(PlayerGameObject[0], piecePrefabs[4]).GetComponent<PieceProvider>();
-            PiecesObject1[14].SetPieceUIInfo(player, 14, PieceType.Piece5);
+            Pieces1[i] = new Piece1(player, i);
+            PiecesObject1[i] = ObjectCreator.CreateInObject(PlayerGameObject[0], piecePrefabs[0]).GetComponent<PieceProvider>();
+            PiecesObject1[i].SetPieceUIInfo(player, i, PieceType.Piece1);
         }
-        else if (player == PlayerType.Player2)
+        for (int i = 5; i < 9; i++)
         {
-            Pieces2 = new PieceBase[15];
-            for (int i = 0; i < 5; i++)
-            {
-                Pieces2[i] = new Piece1(player, i);
-                PiecesObject2[i] = ObjectCreator.CreateInObject(PlayerGameObject[1], piecePrefabs[5]).GetComponent<PieceProvider>();
-                PiecesObject2[i].SetPieceUIInfo(player, i, PieceType.Piece1);
-            }
-            for (int i = 5; i < 9; i++)
-            {
-                Pieces2[i] = new Piece2(player, i);
-                PiecesObject2[i] = ObjectCreator.CreateInObject(PlayerGameObject[1], piecePrefabs[6]).GetComponent<PieceProvider>();
-                PiecesObject2[i].SetPieceUIInfo(player, i, PieceType.Piece2);
-            }
-            for (int i = 9; i < 12; i++)
-            {
-                Pieces2[i] = new Piece3(player, i);
-                PiecesObject2[i] = ObjectCreator.CreateInObject(PlayerGameObject[1], piecePrefabs[7]).GetComponent<PieceProvider>();
-                PiecesObject2[i].SetPieceUIInfo(player, i, PieceType.Piece3);
-            }
-            for (int i = 12; i < 14; i++)
-            {
-                Pieces2[i] = new Piece4(player, i);
-                PiecesObject2[i] = ObjectCreator.CreateInObject(PlayerGameObject[1], piecePrefabs[8]).GetComponent<PieceProvider>();
-                PiecesObject2[i].SetPieceUIInfo(player, i, PieceType.Piece4);
-            }
-            Pieces2[14] = new Piece5(player, 14);
-            PiecesObject2[14] = ObjectCreator.CreateInObject(PlayerGameObject[1], piecePrefabs[9]).GetComponent<PieceProvider>();
-            PiecesObject2[14].SetPieceUIInfo(player, 14, PieceType.Piece5);
+            Pieces1[i] = new Piece2(player, i);
+            PiecesObject1[i] = ObjectCreator.CreateInObject(PlayerGameObject[0], piecePrefabs[1]).GetComponent<PieceProvider>();
+            PiecesObject1[i].SetPieceUIInfo(player, i, PieceType.Piece2);
         }
+        for (int i = 9; i < 12; i++)
+        {
+            Pieces1[i] = new Piece3(player, i);
+            PiecesObject1[i] = ObjectCreator.CreateInObject(PlayerGameObject[0], piecePrefabs[2]).GetComponent<PieceProvider>();
+            PiecesObject1[i].SetPieceUIInfo(player, i, PieceType.Piece3);
+        }
+        for (int i = 12; i < 14; i++)
+        {
+            Pieces1[i] = new Piece4(player, i);
+            PiecesObject1[i] = ObjectCreator.CreateInObject(PlayerGameObject[0], piecePrefabs[3]).GetComponent<PieceProvider>();
+            PiecesObject1[i].SetPieceUIInfo(player, i, PieceType.Piece4);
+        }
+        Pieces1[14] = new Piece5(player, 14);
+        PiecesObject1[14] = ObjectCreator.CreateInObject(PlayerGameObject[0], piecePrefabs[4]).GetComponent<PieceProvider>();
+        PiecesObject1[14].SetPieceUIInfo(player, 14, PieceType.Piece5);
+
+        player = PlayerType.Player2; 
+        Pieces2 = new PieceBase[15];
+        for (int i = 0; i < 5; i++)
+        {
+            Pieces2[i] = new Piece1(player, i);
+            PiecesObject2[i] = ObjectCreator.CreateInObject(PlayerGameObject[1], piecePrefabs[5]).GetComponent<PieceProvider>();
+            PiecesObject2[i].SetPieceUIInfo(player, i, PieceType.Piece1);
+        }
+        for (int i = 5; i < 9; i++)
+        {
+            Pieces2[i] = new Piece2(player, i);
+            PiecesObject2[i] = ObjectCreator.CreateInObject(PlayerGameObject[1], piecePrefabs[6]).GetComponent<PieceProvider>();
+            PiecesObject2[i].SetPieceUIInfo(player, i, PieceType.Piece2);
+        }
+        for (int i = 9; i < 12; i++)
+        {
+            Pieces2[i] = new Piece3(player, i);
+            PiecesObject2[i] = ObjectCreator.CreateInObject(PlayerGameObject[1], piecePrefabs[7]).GetComponent<PieceProvider>();
+            PiecesObject2[i].SetPieceUIInfo(player, i, PieceType.Piece3);
+        }
+        for (int i = 12; i < 14; i++)
+        {
+            Pieces2[i] = new Piece4(player, i);
+            PiecesObject2[i] = ObjectCreator.CreateInObject(PlayerGameObject[1], piecePrefabs[8]).GetComponent<PieceProvider>();
+            PiecesObject2[i].SetPieceUIInfo(player, i, PieceType.Piece4);
+        }
+        Pieces2[14] = new Piece5(player, 14);
+        PiecesObject2[14] = ObjectCreator.CreateInObject(PlayerGameObject[1], piecePrefabs[9]).GetComponent<PieceProvider>();
+        PiecesObject2[14].SetPieceUIInfo(player, 14, PieceType.Piece5);
+
+        PutKings();
     }
 
     private void PutKings()
     {
-        Kings = new PieceProvider[2];
         Kings[0] = ObjectCreator.CreateInObject(PlayerGameObject[0], piecePrefabs[10]).GetComponent<PieceProvider>();
-        Kings[1] = ObjectCreator.CreateInObject(PlayerGameObject[1], piecePrefabs[11]).GetComponent<PieceProvider>();
-
-        StartCoroutine(MovePieceUI(Kings[0].gameObject, 0, 1, false));
         Kings[0].SetPieceUIInfo(PlayerType.Player1, -1, PieceType.King);
+        StartCoroutine(MovePieceUI(Kings[0].gameObject, 0, 1, false));
 
-        StartCoroutine(MovePieceUI(Kings[1].gameObject, 7, 1, false));
+        Kings[1] = ObjectCreator.CreateInObject(PlayerGameObject[1], piecePrefabs[11]).GetComponent<PieceProvider>();
         Kings[1].SetPieceUIInfo(PlayerType.Player2, -1, PieceType.King);
+        StartCoroutine(MovePieceUI(Kings[1].gameObject, 7, 1, false));
+        
         boardManager.PutKings();
     }
 
@@ -222,13 +217,13 @@ public class PlayerManager : MonoBehaviour
         StartObserve();
 
         // 決定ボタンが押される
-        yield return turnEndButton.OnClickAsObservable().First().ToYieldInstruction();
-
-        yield return StrategyUI.HideLowerArea();
+        yield return StrategyUI.TurnEndButton.OnClickAsObservable().First().ToYieldInstruction();
+        
         DisposeAllStream();
         UndoAllActions();
         Reset();
-        yield return null;
+
+        yield return StrategyUI.HideLowerArea();
     }
 
     private void StartObserve()
@@ -289,7 +284,6 @@ public class PlayerManager : MonoBehaviour
     {
         targetPiece.SetPieceInfo(column, row, isPutted, isDestroyed);
     }
-
 
     // 手札周り
     private void SetHoldingPieceUI(PieceBase[] pieces)
@@ -437,8 +431,8 @@ public class PlayerManager : MonoBehaviour
     private void OnClickUndoButton()
     {
         if (playerActions.Count == 0) return;
-        var action = playerActions.Last();
 
+        var action = playerActions.Last();
         UndoPlayerAction(action);
         ChangeCost(-action.Piece.PieceCost);
         playerActions.RemoveAt(playerActions.Count - 1);
