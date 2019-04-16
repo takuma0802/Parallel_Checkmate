@@ -661,6 +661,7 @@ GameObject:
   - component: {fileID: 386028792}
   - component: {fileID: 386028791}
   - component: {fileID: 386028790}
+  - component: {fileID: 386028793}
   m_Layer: 5
   m_Name: HomeButton
   m_TagString: Untagged
@@ -775,6 +776,17 @@ CanvasRenderer:
     type: 2}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 386028788}
+--- !u!114 &386028793
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 386028788}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 84590bca508dc4e1c942fc6b7e1bccec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &387540247
 GameObject:
   m_ObjectHideFlags: 0
@@ -2064,8 +2076,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06745dcba69bf4e239fb739b2ec9a81b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  player1win: 0
-  player2win: 0
   piecePrefabs:
   - {fileID: 1075686916284262, guid: 8e2c056f9a2ed425286d2eb22b4b3a60, type: 2}
   - {fileID: 1466814159445556, guid: 9cdbbfebcd10f464c99794137f381b90, type: 2}
