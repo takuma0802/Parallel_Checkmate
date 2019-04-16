@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using DG.Tweening;
 
 public class PieceProvider : MonoBehaviour
 {
@@ -26,11 +27,17 @@ public class PieceProvider : MonoBehaviour
 	public void ChangeButtonInteractive(bool enable)
 	{
 		pieceButton.interactable = enable;
-		// ButtonのImage変更??
 	}
 
     public void ChangeAttackIcon(bool enable)
     {
         AttackIcon.SetActive(enable);
+    }
+
+    // direction => -1 or 1 (クソ〜〜〜)
+    public IEnumerator AttackAnimation(int direction)
+    {
+        var moveSequence = transform.DOPunchPosition(new Vector3(direction * 35f,0,0),0.2f);
+        yield return moveSequence.WaitForCompletion();
     }
 }

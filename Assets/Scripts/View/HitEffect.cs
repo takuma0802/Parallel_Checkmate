@@ -20,8 +20,8 @@ public class HitEffect : MonoBehaviour
                 Sound.LoadSe("10", "10_komakougeki");
                 Sound.PlaySe("10");
             })
-            .Append(gameObject.transform.DOScale(1f, 0.15f).SetEase(Ease.OutSine))
-            .Append(gameObject.transform.DOScale(0f, 0.15f).SetEase(Ease.OutSine))
+            .Append(gameObject.transform.DOScale(1f, 0.2f).SetEase(Ease.OutSine))
+            .Append(gameObject.transform.DOScale(0f, 0.2f).SetEase(Ease.OutSine))
             .OnComplete(() =>
             {
                 gameObject.SetActive(false);

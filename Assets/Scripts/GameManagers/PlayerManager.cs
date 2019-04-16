@@ -32,7 +32,6 @@ public class PlayerManager : MonoBehaviour
     private PieceProvider[] PiecesObject1 = new PieceProvider[15];
     private PieceProvider[] PiecesObject2 = new PieceProvider[15];
 
-    private List<PieceBase> puttedPieces = new List<PieceBase>(); // 盤上に置かれているPiece情報
     private List<PieceBase> destroyObjects = new List<PieceBase>(); // そのターンで破壊されるPiece情報
     private List<Tuple<int, int>> attackPointList = new List<Tuple<int, int>>(); // そのコマが攻撃することが出来るマスのリスト
 
@@ -68,8 +67,8 @@ public class PlayerManager : MonoBehaviour
         CreateAllPieces();
         yield return new WaitForEndOfFrame();
 
-        foreach (PieceProvider piece in PiecesObject1) SetActivePieceUI(piece.gameObject, false);
-        foreach (PieceProvider piece in PiecesObject2) SetActivePieceUI(piece.gameObject, false);
+        foreach (PieceProvider piece in PiecesObject1) StartCoroutine(SetActivePieceUI(piece.gameObject, false));
+        foreach (PieceProvider piece in PiecesObject2) StartCoroutine(SetActivePieceUI(piece.gameObject, false));
         ObserveStreams();
         yield return new WaitForEndOfFrame();
     }
@@ -188,19 +187,22 @@ public class PlayerManager : MonoBehaviour
         boardManager.PutKings();
     }
 
-    private void SetActivePieceUI(GameObject pieceObj, bool enabled)
+    private IEnumerator SetActivePieceUI(GameObject pieceObj, bool enabled)
     {
         if (enabled)
         {
+
             pieceObj.transform.localScale = new Vector3(0, 0, 0);
             pieceObj.SetActive(enabled);
-            pieceObj.transform.DOScale(1f, 0.3f).SetEase(Ease.InQuad);
+            var moveSequence = pieceObj.transform.DOScale(1f, 0.3f).SetEase(Ease.InQuad);
+            yield return moveSequence.WaitForCompletion();
         }
         else
         {
             pieceObj.transform.localScale = new Vector3(1, 1, 1);
-            pieceObj.transform.DOScale(0f, 0.3f).SetEase(Ease.OutQuint);
+            var moveSequence = pieceObj.transform.DOScale(0f, 0.3f).SetEase(Ease.OutQuint);
             pieceObj.SetActive(enabled);
+            yield return moveSequence.WaitForCompletion();
         }
     }
 
@@ -276,7 +278,7 @@ public class PlayerManager : MonoBehaviour
         else
         {
             target.transform.localPosition = boardManager.ReturnCellLocalPosition(column, row);
-            SetActivePieceUI(target, true);
+            yield return SetActivePieceUI(target, true);
         }
         Sound.LoadSe("9", "9_komaidou");
         Sound.PlaySe("9");
@@ -460,7 +462,7 @@ public class PlayerManager : MonoBehaviour
             {
                 if (!pAction.OnBoard)
                 {
-                    SetActivePieceUI(PiecesObject1[pAction.Piece.PieceNum].gameObject, false);
+                    StartCoroutine(SetActivePieceUI(PiecesObject1[pAction.Piece.PieceNum].gameObject, false));
                     SetPieceInfo(pAction.Piece, 0, 0, false, false);
                 }
                 else
@@ -473,7 +475,7 @@ public class PlayerManager : MonoBehaviour
             {
                 if (!pAction.OnBoard)
                 {
-                    SetActivePieceUI(PiecesObject2[pAction.Piece.PieceNum].gameObject, false);
+                    StartCoroutine(SetActivePieceUI(PiecesObject2[pAction.Piece.PieceNum].gameObject, false));
                     SetPieceInfo(pAction.Piece, 0, 0, false, false);
                 }
                 else
@@ -484,9 +486,6 @@ public class PlayerManager : MonoBehaviour
             }
         }
     }
-
-
-
 
     ///// Battle周り
     public IEnumerator StartMove()
@@ -552,22 +551,22 @@ public class PlayerManager : MonoBehaviour
 
         foreach (PieceBase piece in destroyObjects)
         {
-            DestroyPiece(piece);
+            yield return DestroyPiece(piece);
         }
         destroyObjects.Clear();
         yield return new WaitForSeconds(1.0f);
     }
 
-    private void DestroyPiece(PieceBase piece)
+    private IEnumerator DestroyPiece(PieceBase piece)
     {
         SetPieceInfo(piece, -1, -1, false, true);
         if (piece.Player == PlayerType.Player1)
         {
-            SetActivePieceUI(PiecesObject1[piece.PieceNum].gameObject, false);
+            yield return SetActivePieceUI(PiecesObject1[piece.PieceNum].gameObject, false);
         }
         else if (piece.Player == PlayerType.Player2)
         {
-            SetActivePieceUI(PiecesObject2[piece.PieceNum].gameObject, false);
+            yield return SetActivePieceUI(PiecesObject2[piece.PieceNum].gameObject, false);
         }
         Sound.LoadSe("14", "14_stop");
         Sound.PlaySe("14");
@@ -584,7 +583,17 @@ public class PlayerManager : MonoBehaviour
 
             attackPointList.Clear();
             UpdateAttackPointList(x);
+            // ここでAttackするよ〜アニメーション入れたい
+            if (x.Player == PlayerType.Player1)
+            {
+                yield return PiecesObject1[x.Piece.PieceNum].AttackAnimation(1);
+            }
+            else if (x.Player == PlayerType.Player2)
+            {
+                yield return PiecesObject2[x.Piece.PieceNum].AttackAnimation(-1);
+            }
             yield return PieceAttack(x.Player);
+            yield return new WaitForSeconds(0.5f);
         }
         playerActions.Clear();
     }
@@ -657,6 +666,7 @@ public class PlayerManager : MonoBehaviour
                     player2win = true;
                 }
             }
+            yield return new WaitForSeconds(0.1f);
         }
     }
 
@@ -721,7 +731,7 @@ public class PlayerManager : MonoBehaviour
     {
         foreach (PieceBase piece in destroyObjects)
         {
-            DestroyPiece(piece);
+            yield return DestroyPiece(piece);
         }
         destroyObjects.Clear();
         yield return new WaitForSeconds(1f);
