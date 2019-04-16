@@ -791,7 +791,7 @@ PlayerSettings:
     Collab: 0
     UNet: 1
   facebookSdkVersion: 7.9.4
-  apiCompatibilityLevel: 2
+  apiCompatibilityLevel: 3
   cloudProjectId: f7165bbe-b77e-45c4-bfb6-c6ccb6dc89b3
   projectName: United_GameJam_B
   organizationId: tye-miya
