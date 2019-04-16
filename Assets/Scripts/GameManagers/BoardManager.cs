@@ -64,16 +64,15 @@ public class BoardManager : MonoBehaviour
         cells[7,1].SetKing();
     }
 
+    // public void Undo()
+    // {
+    //     if (previousCells.Count < 2) return;
+    //     var preCell = previousCells[previousCells.Count - 2];
 
-    public void Undo()
-    {
-        if (previousCells.Count < 2) return;
-        var preCell = previousCells[previousCells.Count - 2];
-
-        RemoveAllBtnAction();
-        previousCells[previousCells.Count - 1].ChangeToDefault();
-        previousCells.RemoveAt(previousCells.Count - 1);
-    }
+    //     RemoveAllBtnAction();
+    //     previousCells[previousCells.Count - 1].ChangeToDefault();
+    //     previousCells.RemoveAt(previousCells.Count - 1);
+    // }
 
     public Vector2 ReturnCellLocalPosition(int column, int row)
     {
@@ -81,8 +80,7 @@ public class BoardManager : MonoBehaviour
     }
 
     public void SearchMovePoint(PlayerAction playerAction, bool onBoard)
-    {
-        //if (this.playerAction.Piece == playerAction.Piece) 
+    { 
         RemoveAllBtnAction();
         this.playerAction = playerAction;
 
@@ -214,7 +212,6 @@ public class BoardManager : MonoBehaviour
     private void OnClickedCellButton(CellHandler cell)
     {
         RemoveAllBtnAction();
-        //cell.ChangeToPutted();
 
         playerAction.NextColumn = cell.Column;
         playerAction.NextRow = cell.Row;

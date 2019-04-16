@@ -418,6 +418,7 @@ public class PlayerManager : MonoBehaviour
     private void DisposeAllStream()
     {
         _compositeDisposable.Clear();
+        boardManager.RemoveAllBtnAction();
     }
 
     private void UndoAllActions()
