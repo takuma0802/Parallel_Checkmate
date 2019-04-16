@@ -13,8 +13,8 @@ public class PlayerManager : MonoBehaviour
     private BoardManager boardManager;
 
     /// Player
-    [HideInInspector] public bool player1win = false;
-    [HideInInspector] public bool player2win = false;
+    [HideInInspector] private bool player1win = false;
+    [HideInInspector] private bool player2win = false;
     private PlayerType player; // 現状のターンのPlayer
     private List<PlayerAction> playerActions = new List<PlayerAction>(); // そのターンに起きたActionを全て登録
     private PlayerAction playerAction; // その時のPlayerActionが保存される
@@ -224,7 +224,6 @@ public class PlayerManager : MonoBehaviour
 
         DisposeAllStream();
         UndoAllActions();
-        Reset();
 
         yield return StrategyUI.HideLowerArea();
     }
@@ -560,7 +559,6 @@ public class PlayerManager : MonoBehaviour
 
     private void DestroyPiece(PieceBase piece)
     {
-        puttedPieces.Remove(piece);
         SetPieceInfo(piece, -1, -1, false, true);
         if (piece.Player == PlayerType.Player1)
         {
@@ -584,16 +582,13 @@ public class PlayerManager : MonoBehaviour
             if (x.Piece.IsDestroyed) continue;
 
             attackPointList.Clear();
-            SearchAttackAvailablePoint(x);
-
-            //yield return PieceAttack(x.Player);
-
-            //yield return new WaitForSeconds(0.6f);
+            UpdateAttackPointList(x);
+            yield return PieceAttack(x.Player);
         }
-        yield return new WaitForSeconds(0.5f);
+        playerActions.Clear();
     }
 
-    public void SearchAttackAvailablePoint(PlayerAction playerAction)
+    public void UpdateAttackPointList(PlayerAction playerAction)
     {
         var type = playerAction.Piece.PieceType;
         var player = playerAction.Player;
@@ -620,26 +615,20 @@ public class PlayerManager : MonoBehaviour
         }
     }
 
-    public bool CanAttack(int column, int row)
+    private IEnumerator PieceAttack(PlayerType player)
     {
-        return boardManager.CanAttack(column, row);
-    }
-
-    //    int column, int row, 
-    private IEnumerator PieceAttack(int column, int row,PlayerType player)
-    {
-        // foreach (var cell in attackPointList)
-        // {
-        //     (int x,int y) value;
-        //     var columm = cell[0];
-            if (CanAttack(column, row)) yield break;
+        foreach (var cell in attackPointList)
+        {
+            var column = cell.Item1;
+            var row = cell.Item2;
+            if (!CanAttack(column, row)) continue;
 
             var hitEffect = objectPool.GetObject().GetComponent<HitEffect>();
             hitEffect.ChangePosition(boardManager.ReturnCellLocalPosition(column, row));
             yield return hitEffect.HitEffectAnimation();
 
-            // このCellに敵がいるかチェックして追加
-            var cellNum = row * 8 + column;
+            // 攻撃されたCellに敵のコマがいるかチェックして追加
+            var uniqueCellNum = row * 8 + column;
 
             if (player == PlayerType.Player1)
             {
@@ -647,9 +636,9 @@ public class PlayerManager : MonoBehaviour
                 foreach (var piece in pieces)
                 {
                     var pieceNum = piece.Row * 8 + piece.Column;
-                    if (pieceNum == cellNum) destroyObjects.Add(piece);
+                    if (pieceNum == uniqueCellNum) destroyObjects.Add(piece);
                 }
-                if (cellNum == 15)
+                if (uniqueCellNum == 15) // King
                 {
                     player1win = true;
                 }
@@ -660,94 +649,81 @@ public class PlayerManager : MonoBehaviour
                 foreach (var piece in pieces)
                 {
                     var pieceNum = piece.Row * 8 + piece.Column;
-                    if (pieceNum == cellNum) destroyObjects.Add(piece);
+                    if (pieceNum == uniqueCellNum) destroyObjects.Add(piece);
                 }
-                if (cellNum == 8)
+                if (uniqueCellNum == 8) // King
                 {
                     player2win = true;
                 }
             }
-        //}
+        }
+    }
+
+    public bool CanAttack(int column, int row)
+    {
+        return boardManager.CanAttack(column, row);
     }
 
     private void CheckAttackPointOfPiece1(int column, int row, PlayerType player)
     {
         if (player == PlayerType.Player1)
         {
-            //if (CanAttack(column + 1, row)) PieceAttack(column + 1, row, player);
             attackPointList.Add(Tuple.Create(column + 1, row));
         }
         else if (player == PlayerType.Player2)
         {
-            //if (CanAttack(column - 1, row)) PieceAttack(column - 1, row, player);
             attackPointList.Add(Tuple.Create(column - 1, row));
         }
     }
 
     private void CheckAttackPointOfPiece2(int column, int row, PlayerType player)
     {
-        attackPointList.Add(Tuple.Create(column + 1, row));
-        attackPointList.Add(Tuple.Create(column - 1, row));
-        attackPointList.Add(Tuple.Create(column, row + 1));
-        attackPointList.Add(Tuple.Create(column, row - 1));
-        // if (CanAttack(column + 1, row)) PieceAttack(column + 1, row, player);
-        // if (CanAttack(column - 1, row)) PieceAttack(column - 1, row, player);
-        // if (CanAttack(column, row + 1)) PieceAttack(column, row + 1, player);
-        // if (CanAttack(column, row - 1)) PieceAttack(column, row - 1, player);
+        attackPointList.Add(Tuple.Create(column, row - 1)); // 上
+        attackPointList.Add(Tuple.Create(column + 1, row)); // 右
+        attackPointList.Add(Tuple.Create(column, row + 1)); // 下
+        attackPointList.Add(Tuple.Create(column - 1, row)); // 左
     }
 
     private void CheckAttackPointOfPiece3(int column, int row, PlayerType player)
     {
-        attackPointList.Add(Tuple.Create(column + 2, row - 1));
-        attackPointList.Add(Tuple.Create(column + 2, row + 1));
-        attackPointList.Add(Tuple.Create(column - 2, row - 1));
-        attackPointList.Add(Tuple.Create(column - 2, row + 1));
-        attackPointList.Add(Tuple.Create(column + 1, row + 2));
-        attackPointList.Add(Tuple.Create(column - 1, row + 2));
-        attackPointList.Add(Tuple.Create(column + 1, row - 2));
-        attackPointList.Add(Tuple.Create(column - 1, row - 2));
-
-        // if (CanAttack(column + 2, row - 1)) PieceAttack(column + 2, row - 1, player);
-        // if (CanAttack(column + 2, row + 1)) PieceAttack(column + 2, row + 1, player);
-        // if (CanAttack(column - 2, row - 1)) PieceAttack(column - 2, row - 1, player);
-        // if (CanAttack(column - 2, row + 1)) PieceAttack(column - 2, row + 1, player);
-        // if (CanAttack(column + 1, row + 2)) PieceAttack(column + 1, row + 2, player);
-        // if (CanAttack(column - 1, row + 2)) PieceAttack(column - 1, row + 2, player);
-        // if (CanAttack(column + 1, row - 2)) PieceAttack(column + 1, row - 2, player);
-        // if (CanAttack(column - 1, row - 2)) PieceAttack(column - 1, row - 2, player);
+        attackPointList.Add(Tuple.Create(column + 1, row - 2)); // 右上上
+        attackPointList.Add(Tuple.Create(column + 2, row - 1)); // 右右上
+        attackPointList.Add(Tuple.Create(column + 2, row + 1)); // 右右下
+        attackPointList.Add(Tuple.Create(column + 1, row + 2)); // 右下下
+        attackPointList.Add(Tuple.Create(column - 1, row + 2)); // 左下下
+        attackPointList.Add(Tuple.Create(column - 2, row + 1)); // 左左下
+        attackPointList.Add(Tuple.Create(column - 2, row - 1)); // 左左上
+        attackPointList.Add(Tuple.Create(column - 1, row - 2)); // 左上上
     }
 
     private void CheckAttackPointOfPiece4(int column, int row, PlayerType player)
     {
-        //attackPointList.Add(Tuple.Create());
-        // if (CanAttack(column + 1, row + 1)) PieceAttack(column + 1, row + 1, player);
-        // if (CanAttack(column + 1, row - 1)) PieceAttack(column + 1, row - 1, player);
-        // if (CanAttack(column - 1, row + 1)) PieceAttack(column - 1, row + 1, player);
-        // if (CanAttack(column - 1, row - 1)) PieceAttack(column - 1, row - 1, player);
+        attackPointList.Add(Tuple.Create(column + 1, row - 1)); // 右上
+        attackPointList.Add(Tuple.Create(column + 1, row + 1)); // 右下
+        attackPointList.Add(Tuple.Create(column - 1, row + 1)); // 左下
+        attackPointList.Add(Tuple.Create(column - 1, row - 1)); // 左上
     }
 
     private void CheckAttackPointOfPiece5(int column, int row, PlayerType player)
     {
-        // if (CanAttack(column + 1, row + 1)) PieceAttack(column + 1, row + 1, player);
-        // if (CanAttack(column + 1, row - 1)) PieceAttack(column + 1, row - 1, player);
-        // if (CanAttack(column + 1, row)) PieceAttack(column + 1, row, player);
-        // if (CanAttack(column - 1, row + 1)) PieceAttack(column - 1, row + 1, player);
-        // if (CanAttack(column - 1, row - 1)) PieceAttack(column - 1, row - 1, player);
-        // if (CanAttack(column - 1, row)) PieceAttack(column - 1, row, player);
-        // if (CanAttack(column, row + 1)) PieceAttack(column, row + 1, player);
-        // if (CanAttack(column, row - 1)) PieceAttack(column, row - 1, player);
+        attackPointList.Add(Tuple.Create(column, row - 1)); // 上
+        attackPointList.Add(Tuple.Create(column + 1, row - 1)); // 右上
+        attackPointList.Add(Tuple.Create(column + 1, row)); // 右
+        attackPointList.Add(Tuple.Create(column + 1, row + 1)); // 右下
+        attackPointList.Add(Tuple.Create(column, row + 1)); // 下
+        attackPointList.Add(Tuple.Create(column - 1, row + 1)); // 左下
+        attackPointList.Add(Tuple.Create(column - 1, row)); // 左
+        attackPointList.Add(Tuple.Create(column - 1, row - 1)); // 左上
     }
 
     public IEnumerator ExcecuteAttackDestroy()
     {
-        playerActions.Clear();
-
         foreach (PieceBase piece in destroyObjects)
         {
             DestroyPiece(piece);
         }
         destroyObjects.Clear();
-        yield return null;
+        yield return new WaitForSeconds(1f);
     }
 
     // 返り値 0:続行, 1:1P勝利, 2:2P勝利, 3:引き分け
