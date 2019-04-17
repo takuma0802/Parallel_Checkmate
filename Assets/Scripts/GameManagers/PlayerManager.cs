@@ -757,6 +757,7 @@ public class PlayerManager : MonoBehaviour
     {
         foreach (PieceBase piece in destroyObjects)
         {
+            if(piece.IsDestroyed) continue;
             yield return DestroyPiece(piece);
             yield return new WaitForSeconds(0.3f);
         }
