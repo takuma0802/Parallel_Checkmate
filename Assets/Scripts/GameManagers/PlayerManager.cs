@@ -89,11 +89,11 @@ public class PlayerManager : MonoBehaviour
             {
                 if (x.Player == PlayerType.Player1)
                 {
-                    PiecesObject1[x.Piece.PieceNum].ChangeAttackIcon(true);
+                    SelectAttackAction(x.Player, x.Piece.PieceNum, true);
                 }
                 else if (x.Player == PlayerType.Player2)
                 {
-                    PiecesObject2[x.Piece.PieceNum].ChangeAttackIcon(true);
+                    SelectAttackAction(x.Player, x.Piece.PieceNum, true);
                 }
             }
 
@@ -191,7 +191,6 @@ public class PlayerManager : MonoBehaviour
     {
         if (enabled)
         {
-
             pieceObj.transform.localScale = new Vector3(0, 0, 0);
             pieceObj.SetActive(enabled);
             var moveSequence = pieceObj.transform.DOScale(1f, 0.3f).SetEase(Ease.InQuad);
@@ -203,6 +202,18 @@ public class PlayerManager : MonoBehaviour
             var moveSequence = pieceObj.transform.DOScale(0f, 0.3f).SetEase(Ease.OutQuint);
             pieceObj.SetActive(enabled);
             yield return moveSequence.WaitForCompletion();
+        }
+    }
+
+    private void SelectAttackAction(PlayerType player, int pieceNum, bool enabled)
+    {
+        if (player == PlayerType.Player1)
+        {
+            PiecesObject1[pieceNum].SelectedAttackAction(enabled);
+        }
+        else if (player == PlayerType.Player2)
+        {
+            PiecesObject2[pieceNum].SelectedAttackAction(enabled);
         }
     }
 
@@ -449,11 +460,11 @@ public class PlayerManager : MonoBehaviour
         {
             if (pAction.Player == PlayerType.Player1)
             {
-                PiecesObject1[pAction.Piece.PieceNum].ChangeAttackIcon(false);
+                SelectAttackAction(pAction.Player, pAction.Piece.PieceNum, false);
             }
             else if (pAction.Player == PlayerType.Player2)
             {
-                PiecesObject2[pAction.Piece.PieceNum].ChangeAttackIcon(false);
+                SelectAttackAction(pAction.Player, pAction.Piece.PieceNum, false);
             }
         }
         if (pAction.Action == PieceAction.Move)
@@ -492,12 +503,6 @@ public class PlayerManager : MonoBehaviour
     {
         if (playerActions.Count == 0) yield break;
 
-        for (var i = 0; i < PiecesObject1.Length; i++)
-        {
-            PiecesObject1[i].ChangeAttackIcon(false);
-            PiecesObject2[i].ChangeAttackIcon(false);
-        }
-
         foreach (PlayerAction pAction in playerActions)
         {
             if (pAction.Action == PieceAction.Attack) continue;
@@ -511,10 +516,12 @@ public class PlayerManager : MonoBehaviour
         SetPieceInfo(pAction.Piece, pAction.NextColumn, pAction.NextRow, true, false);
         if (pAction.Player == PlayerType.Player1)
         {
+            PiecesObject1[pAction.Piece.PieceNum].ChangeAttackIcon(false);
             yield return MovePieceUI(PiecesObject1[pAction.Piece.PieceNum].gameObject, pAction.NextColumn, pAction.NextRow, pAction.OnBoard);
         }
         else if (pAction.Player == PlayerType.Player2)
         {
+            PiecesObject2[pAction.Piece.PieceNum].ChangeAttackIcon(false);
             yield return MovePieceUI(PiecesObject2[pAction.Piece.PieceNum].gameObject, pAction.NextColumn, pAction.NextRow, pAction.OnBoard);
         }
     }
@@ -583,17 +590,30 @@ public class PlayerManager : MonoBehaviour
 
             attackPointList.Clear();
             UpdateAttackPointList(x);
-            // ここでAttackするよ〜アニメーション入れたい
+
             if (x.Player == PlayerType.Player1)
             {
+                PiecesObject1[x.Piece.PieceNum].SelectedAttackAction(true);
+                yield return new WaitForSeconds(0.5f);
                 yield return PiecesObject1[x.Piece.PieceNum].AttackAnimation(1);
             }
             else if (x.Player == PlayerType.Player2)
             {
+                PiecesObject2[x.Piece.PieceNum].SelectedAttackAction(true);
+                yield return new WaitForSeconds(0.5f);
                 yield return PiecesObject2[x.Piece.PieceNum].AttackAnimation(-1);
             }
-            yield return PieceAttack(x.Player);
+            yield return ShowAttackEffect(x.Player);
             yield return new WaitForSeconds(0.5f);
+            
+            if (x.Player == PlayerType.Player1)
+            {
+                PiecesObject1[x.Piece.PieceNum].SelectedAttackAction(false);
+            }
+            else if (x.Player == PlayerType.Player2)
+            {
+                PiecesObject2[x.Piece.PieceNum].SelectedAttackAction(false);
+            }
         }
         playerActions.Clear();
     }
@@ -625,7 +645,7 @@ public class PlayerManager : MonoBehaviour
         }
     }
 
-    private IEnumerator PieceAttack(PlayerType player)
+    private IEnumerator ShowAttackEffect(PlayerType player)
     {
         foreach (var cell in attackPointList)
         {
@@ -636,38 +656,44 @@ public class PlayerManager : MonoBehaviour
             var hitEffect = objectPool.GetObject().GetComponent<HitEffect>();
             hitEffect.ChangePosition(boardManager.ReturnCellLocalPosition(column, row));
             yield return hitEffect.HitEffectAnimation();
-
-            // 攻撃されたCellに敵のコマがいるかチェックして追加
-            var uniqueCellNum = row * 8 + column;
-
-            if (player == PlayerType.Player1)
-            {
-                var pieces = Pieces2.Where(i => i.IsPutted && !i.IsDestroyed).ToArray();
-                foreach (var piece in pieces)
-                {
-                    var pieceNum = piece.Row * 8 + piece.Column;
-                    if (pieceNum == uniqueCellNum) destroyObjects.Add(piece);
-                }
-                if (uniqueCellNum == 15) // King
-                {
-                    player1win = true;
-                }
-            }
-            else if (player == PlayerType.Player2)
-            {
-                var pieces = Pieces1.Where(i => i.IsPutted && !i.IsDestroyed).ToArray();
-                foreach (var piece in pieces)
-                {
-                    var pieceNum = piece.Row * 8 + piece.Column;
-                    if (pieceNum == uniqueCellNum) destroyObjects.Add(piece);
-                }
-                if (uniqueCellNum == 8) // King
-                {
-                    player2win = true;
-                }
-            }
             yield return new WaitForSeconds(0.1f);
+
+            CheckAttackedPiece(player, column, row);
         }
+    }
+
+    private void CheckAttackedPiece(PlayerType player, int column, int row)
+    {
+        // 攻撃されたCellに敵のコマがいるかチェックして追加
+        var uniqueCellNum = row * 8 + column;
+
+        if (player == PlayerType.Player1)
+        {
+            var pieces = Pieces2.Where(i => i.IsPutted && !i.IsDestroyed).ToArray();
+            foreach (var piece in pieces)
+            {
+                var pieceNum = piece.Row * 8 + piece.Column;
+                if (pieceNum == uniqueCellNum) destroyObjects.Add(piece);
+            }
+            if (uniqueCellNum == 15) // King
+            {
+                player1win = true;
+            }
+        }
+        else if (player == PlayerType.Player2)
+        {
+            var pieces = Pieces1.Where(i => i.IsPutted && !i.IsDestroyed).ToArray();
+            foreach (var piece in pieces)
+            {
+                var pieceNum = piece.Row * 8 + piece.Column;
+                if (pieceNum == uniqueCellNum) destroyObjects.Add(piece);
+            }
+            if (uniqueCellNum == 8) // King
+            {
+                player2win = true;
+            }
+        }
+
     }
 
     public bool CanAttack(int column, int row)
@@ -732,6 +758,7 @@ public class PlayerManager : MonoBehaviour
         foreach (PieceBase piece in destroyObjects)
         {
             yield return DestroyPiece(piece);
+            yield return new WaitForSeconds(0.3f);
         }
         destroyObjects.Clear();
         yield return new WaitForSeconds(1f);
